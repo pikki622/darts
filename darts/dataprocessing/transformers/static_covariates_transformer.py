@@ -293,7 +293,6 @@ class StaticCovariatesTransformer(FittableDataTransformer, InvertibleDataTransfo
                 col_map_cat = inv_col_map_cat = OrderedDict(
                     {col: [col] for col in cols_cat}
                 )
-            # transformer generates more features (i.e. OneHotEncoder) -> create a 1-many column map
             else:
                 col_map_cat = OrderedDict()
                 inv_col_map_cat = OrderedDict()
@@ -302,12 +301,11 @@ class StaticCovariatesTransformer(FittableDataTransformer, InvertibleDataTransfo
                     for cat in categories:
                         col_map_cat_i.append(cat)
                         if len(categories) > 1:
-                            cat_col_name = str(col) + "_" + str(cat)
+                            cat_col_name = f"{str(col)}_{str(cat)}"
                             inv_col_map_cat[cat_col_name] = [col]
                         else:
                             inv_col_map_cat[cat] = [col]
                     col_map_cat[col] = col_map_cat_i
-        # If we don't have any categorical static covariates, don't need to generate mapping:
         else:
             col_map_cat = {}
             inv_col_map_cat = {}
@@ -459,7 +457,7 @@ class StaticCovariatesTransformer(FittableDataTransformer, InvertibleDataTransfo
                 # covers one to one feature map (ordinal/label encoding) and one to multi feature (one hot encoding)
                 for col_name in col_map_cat[col]:
                     if len(col_map_cat[col]) > 1:
-                        col_name = str(col) + "_" + str(col_name)
+                        col_name = f"{str(col)}_{str(col_name)}"
                     if col_name not in static_cov_columns:
                         data[col_name] = vals_cat[:, idx_cat]
                         static_cov_columns.append(col_name)

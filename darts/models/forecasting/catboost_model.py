@@ -105,16 +105,16 @@ class CatBoostModel(RegressionModel, _LikelihoodMixin):
 
         self._output_chunk_length = output_chunk_length
 
-        likelihood_map = {
-            "quantile": None,
-            "poisson": "Poisson",
-            "gaussian": "RMSEWithUncertainty",
-            "RMSEWithUncertainty": "RMSEWithUncertainty",
-        }
-
-        available_likelihoods = list(likelihood_map.keys())
-
         if likelihood is not None:
+            likelihood_map = {
+                "quantile": None,
+                "poisson": "Poisson",
+                "gaussian": "RMSEWithUncertainty",
+                "RMSEWithUncertainty": "RMSEWithUncertainty",
+            }
+
+            available_likelihoods = list(likelihood_map.keys())
+
             self._check_likelihood(likelihood, available_likelihoods)
             self._rng = np.random.default_rng(seed=random_state)  # seed for sampling
 

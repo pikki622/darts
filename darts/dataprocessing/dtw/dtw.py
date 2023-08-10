@@ -67,8 +67,7 @@ def _dtw_path(dtw: CostMatrix) -> np.ndarray:
 
 # MULTI-SCALE
 def _down_sample(high_res: np.ndarray):
-    needs_padding = len(high_res) & 1
-    if needs_padding:
+    if needs_padding := len(high_res) & 1:
         high_res = np.append(high_res, high_res[-1])
 
     low_res = np.reshape(high_res, (-1, 2))
@@ -128,19 +127,14 @@ def _fast_dtw(
     if n < min_size or m < min_size or radius == -1:
         window = NoWindow()
         window.init_size(n, m)
-        cost = _dtw_cost_matrix(x, y, dist, window)
-
-        return cost
-
+        return _dtw_cost_matrix(x, y, dist, window)
     half_x = _down_sample(x)
     half_y = _down_sample(y)
 
     low_res_cost = _fast_dtw(half_x, half_y, dist, radius, depth + 1)
     low_res_path = _dtw_path(low_res_cost)
     window = _expand_window(low_res_path, len(x), len(y), radius)
-    cost = _dtw_cost_matrix(x, y, dist, window)
-
-    return cost
+    return _dtw_cost_matrix(x, y, dist, window)
 
 
 def _default_distance_multi(x_values: np.ndarray, y_values: np.ndarray):

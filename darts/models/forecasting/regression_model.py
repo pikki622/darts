@@ -126,8 +126,8 @@ class RegressionModel(GlobalForecastingModel):
         super().__init__(add_encoders=add_encoders)
 
         self.model = model
-        self.lags: Dict[str, List[int]] = {}
         self.input_dim = None
+        self.lags: Dict[str, List[int]] = {}
         self.multi_models = multi_models
         self._considers_static_covariates = use_static_covariates
         self._static_covariates_shape: Optional[Tuple[int, int]] = None
@@ -234,8 +234,9 @@ class RegressionModel(GlobalForecastingModel):
                 lags_future_covariates[0] is not None
                 and lags_future_covariates[1] is not None
             ):
-                if not (
-                    lags_future_covariates[0] == 0 and lags_future_covariates[1] == 0
+                if (
+                    lags_future_covariates[0] != 0
+                    or lags_future_covariates[1] != 0
                 ):
                     self.lags["future"] = list(
                         range(-lags_future_covariates[0], lags_future_covariates[1])
@@ -346,12 +347,11 @@ class RegressionModel(GlobalForecastingModel):
         # overrides the ForecastingModel _get_last_prediction_time, taking care of future lags if any
         extra_shift = max(0, max(lags[-1] for lags in self.lags.values()))
 
-        if overlap_end:
-            last_valid_pred_time = series.time_index[-1 - extra_shift]
-        else:
-            last_valid_pred_time = series.time_index[-forecast_horizon - extra_shift]
-
-        return last_valid_pred_time
+        return (
+            series.time_index[-1 - extra_shift]
+            if overlap_end
+            else series.time_index[-forecast_horizon - extra_shift]
+        )
 
     def _create_lagged_data(
         self, target_series, past_covariates, future_covariates, max_samples_per_ts
@@ -603,7 +603,7 @@ class RegressionModel(GlobalForecastingModel):
                 )
             series = self.training_series
 
-        called_with_single_series = True if isinstance(series, TimeSeries) else False
+        called_with_single_series = isinstance(series, TimeSeries)
 
         # guarantee that all inputs are either list of TimeSeries or None
         series = series2seq(series)
@@ -688,7 +688,7 @@ class RegressionModel(GlobalForecastingModel):
                 end_ts = start_ts + ts.freq * (n_steps - 1)
 
                 # check for sufficient covariate data
-                if not (cov.start_time() <= start_ts and cov.end_time() >= end_ts):
+                if cov.start_time() > start_ts or cov.end_time() < end_ts:
                     raise_log(
                         ValueError(
                             f"The corresponding {cov_type}_covariate of the series at index {idx} isn't sufficiently "
@@ -755,14 +755,13 @@ class RegressionModel(GlobalForecastingModel):
                     ].reshape(len(series) * num_samples, -1)
                 )
             # retrieve covariate lags, enforce order (dict only preserves insertion order for python 3.6+)
-            for cov_type in ["past", "future"]:
-                if cov_type in covariate_matrices:
-                    np_X.append(
-                        covariate_matrices[cov_type][
-                            :, relative_cov_lags[cov_type] + t_pred
-                        ].reshape(len(series) * num_samples, -1)
-                    )
-
+            np_X.extend(
+                covariate_matrices[cov_type][
+                    :, relative_cov_lags[cov_type] + t_pred
+                ].reshape(len(series) * num_samples, -1)
+                for cov_type in ["past", "future"]
+                if cov_type in covariate_matrices
+            )
             # concatenate retrieved lags
             X = np.concatenate(np_X, axis=1)
             # Need to split up `X` into three equally-sized sub-blocks
@@ -802,10 +801,10 @@ class RegressionModel(GlobalForecastingModel):
                 custom_components=self._likelihood_components_names(input_tgt)
                 if predict_likelihood_parameters
                 else None,
-                with_static_covs=False if predict_likelihood_parameters else True,
-                with_hierarchy=False if predict_likelihood_parameters else True,
+                with_static_covs=not predict_likelihood_parameters,
+                with_hierarchy=not predict_likelihood_parameters,
             )
-            for idx_ts, (row, input_tgt) in enumerate(zip(predictions, series))
+            for row, input_tgt in zip(predictions, series)
         ]
 
         return predictions[0] if called_with_single_series else predictions
@@ -1043,9 +1042,7 @@ class _LikelihoodMixin:
             # model output has shape (n_series * n_samples, output_chunk_length, n_components)
             model_output = fitted.predict(x, **kwargs).reshape(k, self.pred_dim, -1)
             model_outputs.append(model_output)
-        model_outputs = np.stack(model_outputs, axis=-1)
-        # shape (n_series * n_samples, output_chunk_length, n_components, n_quantiles)
-        return model_outputs
+        return np.stack(model_outputs, axis=-1)
 
     def _predict_poisson(
         self,
@@ -1084,10 +1081,7 @@ class _LikelihoodMixin:
         # deterministic case: we return the mean only
         if num_samples == 1 and not predict_likelihood_parameters:
             # univariate & single-chunk output
-            if output_dim <= 2:
-                output_slice = model_output[:, 0]
-            else:
-                output_slice = model_output[0, :, :]
+            output_slice = model_output[:, 0] if output_dim <= 2 else model_output[0, :, :]
             return output_slice.reshape(k, self.pred_dim, -1)
 
         # probabilistic case
@@ -1189,9 +1183,7 @@ class _LikelihoodMixin:
         ]
 
         samples_transposed = np.array(list_of_samples).transpose()
-        samples_reshaped = samples_transposed.reshape(n_samples, self.pred_dim, -1)
-
-        return samples_reshaped
+        return samples_transposed.reshape(n_samples, self.pred_dim, -1)
 
     def _params_quantile(self, model_output: np.ndarray) -> np.ndarray:
         """Quantiles on the last dimension, grouped by component"""
@@ -1213,8 +1205,7 @@ class _LikelihoodMixin:
 
         # reshape to (n_samples, output_chunk_length, 2)
         params_transposed = np.array(mu_sigma_list).transpose()
-        params_reshaped = params_transposed.reshape(n_samples, self.pred_dim, -1)
-        return params_reshaped
+        return params_transposed.reshape(n_samples, self.pred_dim, -1)
 
     def _predict_and_sample_likelihood(
         self,
@@ -1229,11 +1220,10 @@ class _LikelihoodMixin:
         )
         if predict_likelihood_parameters:
             return getattr(self, f"_params_{likelihood}")(model_output)
+        if num_samples == 1:
+            return model_output
         else:
-            if num_samples == 1:
-                return model_output
-            else:
-                return getattr(self, f"_sampling_{likelihood}")(model_output)
+            return getattr(self, f"_sampling_{likelihood}")(model_output)
 
     def _num_parameters_quantile(self) -> int:
         return len(self.quantiles)
@@ -1512,45 +1502,44 @@ class RegressionModelWithCategoricalCovariates(RegressionModel):
 
         if not categorical_covariates:
             return [], []
-        else:
-            target_ts = get_single_series(series)
-            past_covs_ts = get_single_series(past_covariates)
-            fut_covs_ts = get_single_series(future_covariates)
+        target_ts = get_single_series(series)
+        past_covs_ts = get_single_series(past_covariates)
+        fut_covs_ts = get_single_series(future_covariates)
 
-            # We keep the creation order of the different lags/features in create_lagged_data
-            feature_list = (
-                [
-                    f"target_{component}_lag{lag}"
-                    for lag in self.lags.get("target", [])
-                    for component in target_ts.components
-                ]
-                + [
-                    f"past_cov_{component}_lag{lag}"
-                    for lag in self.lags.get("past", [])
-                    for component in past_covs_ts.components
-                ]
-                + [
-                    f"fut_cov_{component}_lag{lag}"
-                    for lag in self.lags.get("future", [])
-                    for component in fut_covs_ts.components
-                ]
-                + (
-                    list(target_ts.static_covariates.columns)
-                    if target_ts.has_static_covariates
-                    # if isinstance(target_ts.static_covariates, pd.DataFrame)
-                    else []
-                )
-            )
-
-            indices = [
-                i
-                for i, col in enumerate(feature_list)
-                for cat in categorical_covariates
-                if cat and cat in col
+        # We keep the creation order of the different lags/features in create_lagged_data
+        feature_list = (
+            [
+                f"target_{component}_lag{lag}"
+                for lag in self.lags.get("target", [])
+                for component in target_ts.components
             ]
-            col_names = [feature_list[i] for i in indices]
+            + [
+                f"past_cov_{component}_lag{lag}"
+                for lag in self.lags.get("past", [])
+                for component in past_covs_ts.components
+            ]
+            + [
+                f"fut_cov_{component}_lag{lag}"
+                for lag in self.lags.get("future", [])
+                for component in fut_covs_ts.components
+            ]
+            + (
+                list(target_ts.static_covariates.columns)
+                if target_ts.has_static_covariates
+                # if isinstance(target_ts.static_covariates, pd.DataFrame)
+                else []
+            )
+        )
 
-            return indices, col_names
+        indices = [
+            i
+            for i, col in enumerate(feature_list)
+            for cat in categorical_covariates
+            if cat and cat in col
+        ]
+        col_names = [feature_list[i] for i in indices]
+
+        return indices, col_names
 
     def _fit_model(
         self,

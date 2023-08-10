@@ -21,9 +21,7 @@ def get_logger(name):
     A logger instance with the given name.
     """
 
-    logger = logging.getLogger(name)
-
-    return logger
+    return logging.getLogger(name)
 
 
 def raise_deprecation_warning(
@@ -46,7 +44,7 @@ def raise_deprecation_warning(
         DeprecationWarning
     """
 
-    logger.warning("DeprecationWarning: " + message)
+    logger.warning(f"DeprecationWarning: {message}")
 
 
 def raise_if_not(
@@ -74,7 +72,7 @@ def raise_if_not(
     """
 
     if not condition:
-        logger.error("ValueError: " + message)
+        logger.error(f"ValueError: {message}")
         raise ValueError(message)
 
 
@@ -124,7 +122,7 @@ def raise_log(exception: Exception, logger: logging.Logger = get_logger("main_lo
 
     exception_type = str(type(exception)).split("'")[1]
     message = str(exception)
-    logger.error(exception_type + ": " + message)
+    logger.error(f"{exception_type}: {message}")
 
     raise exception
 
@@ -148,7 +146,7 @@ def time_log(logger: logging.Logger = get_logger("main_logger")):
             result = method(*args, **kwargs)
             end_time = time.time()
             duration = int((end_time - start_time) * 1000)
-            logger.info(method.__name__ + f" function ran for {duration} milliseconds")
+            logger.info(f"{method.__name__} function ran for {duration} milliseconds")
             return result
 
         return timed
@@ -171,7 +169,7 @@ class SuppressStdoutStderr:
 
     def __init__(self):
         # Open a pair of null files
-        self.null_fds = [os.open(os.devnull, os.O_RDWR) for x in range(2)]
+        self.null_fds = [os.open(os.devnull, os.O_RDWR) for _ in range(2)]
         # Save the actual stdout (1) and stderr (2) file descriptors.
         self.save_fds = [os.dup(1), os.dup(2)]
 

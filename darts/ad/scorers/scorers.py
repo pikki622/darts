@@ -61,12 +61,12 @@ class AnomalyScorer(ABC):
 
         if self.univariate_scorer:
             raise_if_not(
-                all([isinstance(s, TimeSeries) for s in actual_anomalies]),
+                all(isinstance(s, TimeSeries) for s in actual_anomalies),
                 "all series in `actual_anomalies` must be of type TimeSeries.",
             )
 
             raise_if_not(
-                all([s.width == 1 for s in actual_anomalies]),
+                all(s.width == 1 for s in actual_anomalies),
                 f"Scorer {self.__str__()} will return a univariate anomaly score series (width=1)."
                 + " Found a multivariate `actual_anomalies`."
                 + " The evaluation of the accuracy cannot be computed between the two series.",

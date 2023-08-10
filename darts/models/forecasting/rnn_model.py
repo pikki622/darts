@@ -127,13 +127,12 @@ class _RNNModule(PLDualCovariatesModule):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """overwrite parent classes `_produce_predict_output` method"""
         output, hidden = self(x, last_hidden_state)
-        if self.likelihood:
-            if self.predict_likelihood_parameters:
-                return self.likelihood.predict_likelihood_parameters(output), hidden
-            else:
-                return self.likelihood.sample(output), hidden
-        else:
+        if not self.likelihood:
             return output.squeeze(dim=-1), hidden
+        if self.predict_likelihood_parameters:
+            return self.likelihood.predict_likelihood_parameters(output), hidden
+        else:
+            return self.likelihood.sample(output), hidden
 
     def _get_batch_prediction(
         self, n: int, input_batch: Tuple, roll_size: int
@@ -163,14 +162,11 @@ class _RNNModule(PLDualCovariatesModule):
             input_series = past_target
             cov_future = None
 
-        batch_prediction = []
         out, last_hidden_state = self._produce_predict_output(
             (input_series, static_covariates)
         )
-        batch_prediction.append(out[:, -1:, :])
-        prediction_length = 1
-
-        while prediction_length < n:
+        batch_prediction = [out[:, -1:, :]]
+        for prediction_length in range(1, n):
 
             # create new input to model from last prediction and current covariates, if available
             new_input = (
@@ -192,8 +188,6 @@ class _RNNModule(PLDualCovariatesModule):
 
             # append prediction to batch prediction array, increase counter
             batch_prediction.append(out[:, -1:, :])
-            prediction_length += 1
-
         # bring predictions into desired format and drop unnecessary values
         batch_prediction = torch.cat(batch_prediction, dim=1)
         batch_prediction = batch_prediction[:, :n, :]
@@ -385,7 +379,7 @@ class RNNModel(DualCovariatesTorchModel):
             your forecasting use case. Default: ``False``.
         """
         # create copy of model parameters
-        model_kwargs = {key: val for key, val in self.model_params.items()}
+        model_kwargs = dict(self.model_params.items())
 
         if model_kwargs.get("output_chunk_length") is not None:
             logger.warning(
@@ -403,10 +397,7 @@ class RNNModel(DualCovariatesTorchModel):
         if model not in ["RNN", "LSTM", "GRU"]:
             raise_if_not(
                 isinstance(model, nn.Module),
-                '{} is not a valid RNN model.\n Please specify "RNN", "LSTM", '
-                '"GRU", or give your own PyTorch nn.Module'.format(
-                    model.__class__.__name__
-                ),
+                f'{model.__class__.__name__} is not a valid RNN model.\n Please specify "RNN", "LSTM", "GRU", or give your own PyTorch nn.Module',
                 logger,
             )
 
@@ -425,8 +416,8 @@ class RNNModel(DualCovariatesTorchModel):
         output_dim = train_sample[-1].shape[1]
         nr_params = 1 if self.likelihood is None else self.likelihood.num_parameters
 
-        if self.rnn_type_or_module in ["RNN", "LSTM", "GRU"]:
-            model = _RNNModule(
+        return (
+            _RNNModule(
                 name=self.rnn_type_or_module,
                 input_size=input_dim,
                 target_size=output_dim,
@@ -436,8 +427,8 @@ class RNNModel(DualCovariatesTorchModel):
                 num_layers=self.n_rnn_layers,
                 **self.pl_module_params,
             )
-        else:
-            model = self.rnn_type_or_module(
+            if self.rnn_type_or_module in ["RNN", "LSTM", "GRU"]
+            else self.rnn_type_or_module(
                 name="custom_module",
                 input_size=input_dim,
                 target_size=output_dim,
@@ -447,7 +438,7 @@ class RNNModel(DualCovariatesTorchModel):
                 num_layers=self.n_rnn_layers,
                 **self.pl_module_params,
             )
-        return model
+        )
 
     def _build_train_dataset(
         self,

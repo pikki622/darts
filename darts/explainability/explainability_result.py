@@ -55,7 +55,9 @@ class ComponentBasedExplainabilityResult(_ExplainabilityResult):
     ):
         if isinstance(explained_components, list):
             comps_available = explained_components[0].keys()
-            if not all(comp.keys() == comps_available for comp in explained_components):
+            if any(
+                comp.keys() != comps_available for comp in explained_components
+            ):
                 raise_log(
                     ValueError(
                         "When giving a list of explained component dicts, the dict keys must match."
@@ -453,8 +455,7 @@ class TFTExplainabilityResult(ComponentBasedExplainabilityResult):
         :func:`TFTExplainer.explain() <darts.explainability.tft_explainer.TFTExplainer.explain>`, returns a list of
         TimeSeries.
         """
-        attention = self.get_explanation("attention")
-        return attention
+        return self.get_explanation("attention")
 
     def get_feature_importances(
         self,

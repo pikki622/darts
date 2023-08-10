@@ -338,11 +338,10 @@ class BaseDataTransformer(ABC):
         )
 
         if self._mask_components:
-            unmasked = []
-            for ts, transformed_ts in zip(input_series, transformed_data):
-                unmasked.append(
-                    self.unapply_component_mask(ts, transformed_ts, component_mask)
-                )
+            unmasked = [
+                self.unapply_component_mask(ts, transformed_ts, component_mask)
+                for ts, transformed_ts in zip(input_series, transformed_data)
+            ]
             transformed_data = unmasked
 
         return (
@@ -366,11 +365,7 @@ class BaseDataTransformer(ABC):
             for i in range(n_timeseries):
                 for key in parallel_params:
                     fixed_params_copy[key] = fixed_params[key][i]
-                if fixed_params_copy:
-                    params = {"fixed": fixed_params_copy}
-                else:
-                    params = None
-                yield params
+                yield {"fixed": fixed_params_copy} if fixed_params_copy else None
             return None
 
         return params_generator(n_timeseries, self._fixed_params, self._parallel_params)
@@ -522,8 +517,7 @@ class BaseDataTransformer(ABC):
             vals = vals.all_values()
         shape = vals.shape
         new_shape = (shape[0] * shape[2], shape[1])
-        stacked = np.swapaxes(vals, 1, 2).reshape(new_shape)
-        return stacked
+        return np.swapaxes(vals, 1, 2).reshape(new_shape)
 
     @staticmethod
     def unstack_samples(
@@ -569,8 +563,7 @@ class BaseDataTransformer(ABC):
             reshaped_vals = vals.reshape(n_timesteps, -1, n_components)
         else:
             reshaped_vals = vals.reshape(-1, n_samples, n_components)
-        unstacked = np.swapaxes(reshaped_vals, 1, 2)
-        return unstacked
+        return np.swapaxes(reshaped_vals, 1, 2)
 
     @property
     def name(self):

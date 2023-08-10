@@ -163,18 +163,13 @@ class _TFTModule(PLMixedCovariatesModule):
             for name in self.reals
         }
 
-        # static (categorical and numerical) variables
         static_input_sizes = {
             name: self.input_embeddings.output_size[name]
             for name in self.categorical_static_variables
+        } | {
+            name: self.hidden_continuous_size
+            for name in self.numeric_static_variables
         }
-        static_input_sizes.update(
-            {
-                name: self.hidden_continuous_size
-                for name in self.numeric_static_variables
-            }
-        )
-
         self.static_covariates_vsn = _VariableSelectionNetwork(
             input_sizes=static_input_sizes,
             hidden_size=self.hidden_size,
@@ -437,16 +432,13 @@ class _TFTModule(PLMixedCovariatesModule):
         encoder_mask = torch.zeros(
             batch_size, encoder_length, dtype=torch.bool, device=device
         )
-        # combine masks along attended time - first encoder and then decoder
-
-        mask = torch.cat(
+        return torch.cat(
             (
                 encoder_mask.unsqueeze(1).expand(-1, decoder_length, -1),
                 decoder_mask.unsqueeze(0).expand(batch_size, -1, -1),
             ),
             dim=2,
         )
-        return mask
 
     def forward(
         self, x_in: Tuple[torch.Tensor, Optional[torch.Tensor], Optional[torch.Tensor]]
@@ -872,7 +864,7 @@ class TFTModel(MixedCovariatesTorchModel):
         .. [1] https://arxiv.org/pdf/1912.09363.pdf
         ..[2] Shazeer, Noam, "GLU Variants Improve Transformer", 2020. arVix https://arxiv.org/abs/2002.05202.
         """
-        model_kwargs = {key: val for key, val in self.model_params.items()}
+        model_kwargs = dict(self.model_params.items())
         if likelihood is None and loss_fn is None:
             # This is the default if no loss information is provided
             model_kwargs["loss_fn"] = None

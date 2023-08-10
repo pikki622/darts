@@ -43,19 +43,16 @@ class Detector(ABC):
         list_series = [series] if not isinstance(series, Sequence) else series
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_series]),
+            all(isinstance(s, TimeSeries) for s in list_series),
             "all series in `series` must be of type TimeSeries.",
         )
 
         raise_if_not(
-            all([s.is_deterministic for s in list_series]),
+            all(s.is_deterministic for s in list_series),
             "all series in `series` must be deterministic (number of samples equal to 1).",
         )
 
-        detected_series = []
-        for s in list_series:
-            detected_series.append(self._detect_core(s))
-
+        detected_series = [self._detect_core(s) for s in list_series]
         if len(detected_series) == 1 and not isinstance(series, Sequence):
             return detected_series[0]
         else:
@@ -96,12 +93,12 @@ class Detector(ABC):
 
         if isinstance(anomaly_score, Sequence):
             raise_if_not(
-                all([isinstance(s, TimeSeries) for s in anomaly_score]),
+                all(isinstance(s, TimeSeries) for s in anomaly_score),
                 "all series in `anomaly_score` must be of type TimeSeries.",
             )
 
             raise_if_not(
-                all([s.is_deterministic for s in anomaly_score]),
+                all(s.is_deterministic for s in anomaly_score),
                 "all series in `anomaly_score` must be deterministic (number of samples equal to 1).",
             )
         else:
@@ -152,7 +149,7 @@ class FittableDetector(Detector):
         )
 
         raise_if_not(
-            all([self.width_trained_on == s.width for s in list_series]),
+            all(self.width_trained_on == s.width for s in list_series),
             "all series in `series` must have the same number of components as the data "
             + "used for training the detector model, number of components in training: "
             + f" {self.width_trained_on}.",
@@ -181,19 +178,19 @@ class FittableDetector(Detector):
         list_series = [series] if not isinstance(series, Sequence) else series
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_series]),
+            all(isinstance(s, TimeSeries) for s in list_series),
             "all series in `series` must be of type TimeSeries.",
         )
 
         raise_if_not(
-            all([s.is_deterministic for s in list_series]),
+            all(s.is_deterministic for s in list_series),
             "all series in `series` must be deterministic (number of samples equal to 1).",
         )
 
         self.width_trained_on = list_series[0].width
 
         raise_if_not(
-            all([s.width == self.width_trained_on for s in list_series]),
+            all(s.width == self.width_trained_on for s in list_series),
             "all series in `series` must have the same number of components.",
         )
 

@@ -124,9 +124,7 @@ class RegressionEnsembleModel(EnsembleModel):
         if is_single_series:
             train_n_points_too_big = len(self.training_series) <= self.train_n_points
         else:
-            train_n_points_too_big = any(
-                [len(s) <= self.train_n_points for s in series]
-            )
+            train_n_points_too_big = any(len(s) <= self.train_n_points for s in series)
 
         raise_if(
             train_n_points_too_big,

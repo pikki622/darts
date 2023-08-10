@@ -118,7 +118,7 @@ class Theta(LocalForecastingModel):
 
         # Linear Regression part of the decomposition. We select the degree one coefficient.
         b_theta = np.polyfit(
-            np.array([i for i in range(0, self.length)]),
+            np.array(list(range(0, self.length))),
             (1.0 - self.theta) * new_ts.values(copy=False),
             1,
         )[0]
@@ -463,11 +463,11 @@ class FourTheta(LocalForecastingModel):
                 "linear trend and additive modes."
             )
         else:
-            season_mode = [season for season in SeasonalityMode]
-            model_mode = [model for model in ModelMode]
-            drift_mode = [trend for trend in TrendMode]
+            season_mode = list(SeasonalityMode)
+            model_mode = list(ModelMode)
+            drift_mode = list(TrendMode)
 
-        theta = FourTheta.gridsearch(
+        return FourTheta.gridsearch(
             {
                 "theta": thetas,
                 "model_mode": model_mode,
@@ -481,7 +481,6 @@ class FourTheta(LocalForecastingModel):
             metric=mae,
             n_jobs=n_jobs,
         )
-        return theta
 
     @property
     def supports_multivariate(self) -> bool:

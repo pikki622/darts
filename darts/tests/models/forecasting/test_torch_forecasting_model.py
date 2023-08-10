@@ -200,7 +200,7 @@ if TORCH_AVAILABLE:
 
             # save() model directly after load_from_checkpoint()
             checkpoint_file_name_2 = "checkpoint_1.pth.tar"
-            checkpoint_file_name_cpkt_2 = checkpoint_file_name_2 + ".ckpt"
+            checkpoint_file_name_cpkt_2 = f"{checkpoint_file_name_2}.ckpt"
 
             model_path_manual_2 = os.path.join(
                 checkpoint_path_manual, checkpoint_file_name_2

@@ -280,7 +280,7 @@ if TORCH_AVAILABLE:
             ts_linear = tg.linear_timeseries(
                 0, 1, length=season_length, start=ts_sine.end_time() + ts_sine.freq
             )
-            for i in range(n_repeat - 1):
+            for _ in range(n_repeat - 1):
                 start = ts_linear.end_time() + ts_linear.freq
                 new_ts = tg.linear_timeseries(0, 1, length=season_length, start=start)
                 ts_linear = ts_linear.append(new_ts)

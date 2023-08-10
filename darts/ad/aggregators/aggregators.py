@@ -65,28 +65,26 @@ class Aggregator(ABC):
         list_series = _to_list(series)
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_series]),
+            all(isinstance(s, TimeSeries) for s in list_series),
             "all series in `series` must be of type TimeSeries.",
         )
 
         raise_if_not(
-            all([s.width > 1 for s in list_series]),
+            all(s.width > 1 for s in list_series),
             "all series in `series` must be multivariate (width>1).",
         )
 
         raise_if_not(
-            all([s.is_deterministic for s in list_series]),
+            all(s.is_deterministic for s in list_series),
             "all series in `series` must be deterministic (number of samples=1).",
         )
 
         raise_if_not(
             all(
-                [
-                    np.array_equal(
-                        s.values(copy=False), s.values(copy=False).astype(bool)
-                    )
-                    for s in list_series
-                ]
+                np.array_equal(
+                    s.values(copy=False), s.values(copy=False).astype(bool)
+                )
+                for s in list_series
             ),
             "all series in `series` must be binary (only 0 and 1 values).",
         )
@@ -128,17 +126,17 @@ class Aggregator(ABC):
         list_actual_anomalies = _to_list(actual_anomalies)
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_actual_anomalies]),
+            all(isinstance(s, TimeSeries) for s in list_actual_anomalies),
             "all series in `actual_anomalies` must be of type TimeSeries.",
         )
 
         raise_if_not(
-            all([s.is_deterministic for s in list_actual_anomalies]),
+            all(s.is_deterministic for s in list_actual_anomalies),
             "all series in `actual_anomalies` must be deterministic (number of samples=1).",
         )
 
         raise_if_not(
-            all([s.width == 1 for s in list_actual_anomalies]),
+            all(s.width == 1 for s in list_actual_anomalies),
             "all series in `actual_anomalies` must be univariate (width=1).",
         )
 
@@ -227,24 +225,24 @@ class FittableAggregator(Aggregator):
         self.width_trained_on = list_series[0].width
 
         raise_if_not(
-            all([s.width == self.width_trained_on for s in list_series]),
+            all(s.width == self.width_trained_on for s in list_series),
             "all series in `list_series` must have the same number of components.",
         )
 
         list_actual_anomalies = _to_list(actual_anomalies)
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_actual_anomalies]),
+            all(isinstance(s, TimeSeries) for s in list_actual_anomalies),
             "all series in `actual_anomalies` must be of type TimeSeries.",
         )
 
         raise_if_not(
-            all([s.is_deterministic for s in list_actual_anomalies]),
+            all(s.is_deterministic for s in list_actual_anomalies),
             "all series in `actual_anomalies` must be deterministic (width=1).",
         )
 
         raise_if_not(
-            all([s.width == 1 for s in list_actual_anomalies]),
+            all(s.width == 1 for s in list_actual_anomalies),
             "all series in `actual_anomalies` must be univariate (width=1).",
         )
 
@@ -288,7 +286,7 @@ class FittableAggregator(Aggregator):
         list_series = self._check_input(series)
 
         raise_if_not(
-            all([s.width == self.width_trained_on for s in list_series]),
+            all(s.width == self.width_trained_on for s in list_series),
             "all series in `series` must have the same number of components as the data"
             + " used for training the detector model, number of components in training:"
             + f" {self.width_trained_on}.",

@@ -306,10 +306,7 @@ class BlockRNNModel(PastCovariatesTorchModel):
         if model not in ["RNN", "LSTM", "GRU"]:
             raise_if_not(
                 isinstance(model, nn.Module),
-                '{} is not a valid RNN model.\n Please specify "RNN", "LSTM", '
-                '"GRU", or give your own PyTorch nn.Module'.format(
-                    model.__class__.__name__
-                ),
+                f'{model.__class__.__name__} is not a valid RNN model.\n Please specify "RNN", "LSTM", "GRU", or give your own PyTorch nn.Module',
                 logger,
             )
 
@@ -324,6 +321,11 @@ class BlockRNNModel(PastCovariatesTorchModel):
         return True
 
     def _create_model(self, train_sample: Tuple[torch.Tensor]) -> torch.nn.Module:
+        if self.rnn_type_or_module not in ["RNN", "LSTM", "GRU"]:
+            return self.rnn_type_or_module
+        hidden_fc_sizes = (
+            [] if self.hidden_fc_sizes is None else self.hidden_fc_sizes
+        )
         # samples are made of (past_target, past_covariates, future_target)
         input_dim = train_sample[0].shape[1] + (
             train_sample[1].shape[1] if train_sample[1] is not None else 0
@@ -331,21 +333,14 @@ class BlockRNNModel(PastCovariatesTorchModel):
         output_dim = train_sample[-1].shape[1]
         nr_params = 1 if self.likelihood is None else self.likelihood.num_parameters
 
-        if self.rnn_type_or_module in ["RNN", "LSTM", "GRU"]:
-            hidden_fc_sizes = (
-                [] if self.hidden_fc_sizes is None else self.hidden_fc_sizes
-            )
-            model = _BlockRNNModule(
-                name=self.rnn_type_or_module,
-                input_size=input_dim,
-                target_size=output_dim,
-                nr_params=nr_params,
-                hidden_dim=self.hidden_dim,
-                num_layers=self.n_rnn_layers,
-                num_layers_out_fc=hidden_fc_sizes,
-                dropout=self.dropout,
-                **self.pl_module_params,
-            )
-        else:
-            model = self.rnn_type_or_module
-        return model
+        return _BlockRNNModule(
+            name=self.rnn_type_or_module,
+            input_size=input_dim,
+            target_size=output_dim,
+            nr_params=nr_params,
+            hidden_dim=self.hidden_dim,
+            num_layers=self.n_rnn_layers,
+            num_layers_out_fc=hidden_fc_sizes,
+            dropout=self.dropout,
+            **self.pl_module_params,
+        )

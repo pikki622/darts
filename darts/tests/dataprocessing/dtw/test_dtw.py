@@ -55,10 +55,8 @@ class DynamicTimeWarpingTestCase(DartsBaseTestClass):
         input2 = [1] + input1[:-1]
 
         expected_path = (
-            [(0, 0)]
-            + list((i - 1, i) for i in range(1, len(input1)))
-            + [(len(input1) - 1, len(input2) - 1)]
-        )
+            [(0, 0)] + [(i - 1, i) for i in range(1, len(input1))]
+        ) + [(len(input1) - 1, len(input2) - 1)]
 
         series1 = _series_from_values(input1)
         series2 = _series_from_values(input2)

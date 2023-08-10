@@ -74,10 +74,10 @@ class CostMatrix(ABC):
 
 
 class DenseCostMatrix(np.ndarray, CostMatrix):
-    def __new__(self, n, m):
-        self.n = n
-        self.m = m
-        return super().__new__(self, (n + 1, m + 1), float)
+    def __new__(cls, n, m):
+        cls.n = n
+        cls.m = m
+        return super().__new__(cls, (n + 1, m + 1), float)
 
     def to_dense(self) -> np.ndarray:
         return self[1:, 1:]
@@ -143,9 +143,7 @@ class SparseCostMatrix(CostMatrix):
 
         start = self.column_ranges[i * 2 + 0]
         end = self.column_ranges[i * 2 + 1]
-        if start <= j < end:
-            return self.dense[self.offsets[i] + j - start]
-        return np.inf
+        return self.dense[self.offsets[i] + j - start] if start <= j < end else np.inf
 
     def __setitem__(self, elem, value):
         i, j = elem

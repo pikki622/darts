@@ -201,9 +201,7 @@ def _crop_to_match_seasons(
     while curr_ts < pred_ts - 4 * freq:
         curr_ts += freq
         if _compare_timestamps_on_attributes(pred_ts, curr_ts, required_matches):
-            new_series = series.drop_before(curr_ts)
-            return new_series
-
+            return series.drop_before(curr_ts)
     logger.warning(
         "No matching timestamp could be found, returning original TimeSeries."
     )

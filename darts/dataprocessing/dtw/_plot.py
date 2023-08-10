@@ -42,11 +42,7 @@ def plot(
         Some keyword arguments to pass to `plot()` method for series2
     """
 
-    if new_plot:
-        fig = plt.figure()
-    else:
-        fig = plt.gcf()
-
+    fig = plt.figure() if new_plot else plt.gcf()
     if show_series:
         gs = fig.add_gridspec(2, 2, width_ratios=[0.4, 0.6], height_ratios=[0.6, 0.4])
 
@@ -167,11 +163,11 @@ def plot_alignment(
     x_coords = np.empty(n * 3, dtype=x_dtype)
     y_coords = np.empty(n * 3, dtype=np.float64)
 
-    x_coords[0::3] = x_coords1
+    x_coords[::3] = x_coords1
     x_coords[1::3] = x_coords2
     x_coords[2::3] = x_nan
 
-    y_coords[0::3] = y_coords1
+    y_coords[::3] = y_coords1
     y_coords[1::3] = y_coords2
     y_coords[2::3] = np.nan
 

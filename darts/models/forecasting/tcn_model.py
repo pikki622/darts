@@ -195,23 +195,23 @@ class _TCNModule(PLPastCovariatesModule):
         self.dropout = MonteCarloDropout(p=dropout)
 
         # If num_layers is not passed, compute number of layers needed for full history coverage
-        if num_layers is None and dilation_base > 1:
-            num_layers = math.ceil(
-                math.log(
-                    (self.input_chunk_length - 1)
-                    * (dilation_base - 1)
-                    / (kernel_size - 1)
-                    / 2
-                    + 1,
-                    dilation_base,
+        if num_layers is None:
+            if dilation_base > 1:
+                num_layers = math.ceil(
+                    math.log(
+                        (self.input_chunk_length - 1)
+                        * (dilation_base - 1)
+                        / (kernel_size - 1)
+                        / 2
+                        + 1,
+                        dilation_base,
+                    )
                 )
-            )
-            logger.info("Number of layers chosen: " + str(num_layers))
-        elif num_layers is None:
-            num_layers = math.ceil(
-                (self.input_chunk_length - 1) / (kernel_size - 1) / 2
-            )
-            logger.info("Number of layers chosen: " + str(num_layers))
+            else:
+                num_layers = math.ceil(
+                    (self.input_chunk_length - 1) / (kernel_size - 1) / 2
+                )
+            logger.info(f"Number of layers chosen: {str(num_layers)}")
         self.num_layers = num_layers
 
         # Building TCN module

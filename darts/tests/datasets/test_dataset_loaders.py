@@ -67,7 +67,7 @@ datasets = [
     WeatherDataset,
 ]
 
-_DEFAULT_PATH_TEST = _DEFAULT_PATH + "/tests"
+_DEFAULT_PATH_TEST = f"{_DEFAULT_PATH}/tests"
 
 width_datasets = [1, 1, 96, 28, 1, 2, 1, 1, 1, 1, 1, 1, 1, 2, 1, 7, 7, 7, 7, 370, 262]
 
@@ -105,7 +105,7 @@ wrong_zip_url_dataset = DatasetLoaderCSV(
 no_pre_process_fn_dataset = DatasetLoaderCSV(
     metadata=DatasetLoaderMetadata(
         "no_pre_process_fn",
-        uri=_DEFAULT_PATH_TEST + "/test.zip",
+        uri=f"{_DEFAULT_PATH_TEST}/test.zip",
         hash="167ffa96204a2b47339c21eea25baf32",
         header_time="Month",
         pre_process_zipped_csv_fn=None,
@@ -114,7 +114,7 @@ no_pre_process_fn_dataset = DatasetLoaderCSV(
 ele_multi_series_dataset = DatasetLoaderCSV(
     metadata=DatasetLoaderMetadata(
         "Electricity_test.csv",
-        uri=_DEFAULT_PATH_TEST + "/Electricity_test.csv",
+        uri=f"{_DEFAULT_PATH_TEST}/Electricity_test.csv",
         hash="e036be148b06dacf2bb78b4647e6ea2b",
         header_time="Time",
         pre_process_zipped_csv_fn=None,

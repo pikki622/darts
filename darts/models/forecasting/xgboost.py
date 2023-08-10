@@ -121,9 +121,9 @@ class XGBModel(RegressionModel, _LikelihoodMixin):
         self.likelihood = likelihood
         self._rng = None
 
-        # parse likelihood
-        available_likelihoods = ["poisson", "quantile"]  # to be extended
         if likelihood is not None:
+            # parse likelihood
+            available_likelihoods = ["poisson", "quantile"]  # to be extended
             self._check_likelihood(likelihood, available_likelihoods)
             if likelihood in {"poisson"}:
                 self.kwargs["objective"] = f"count:{likelihood}"

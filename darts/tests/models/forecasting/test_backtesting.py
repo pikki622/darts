@@ -74,9 +74,9 @@ def compare_best_against_random(model_class, params, series, stride=1):
 
     # instantiate model with random parameters from 'params'
     random.seed(1)
-    random_param_choice = {}
-    for key in params.keys():
-        random_param_choice[key] = random.choice(params[key])
+    random_param_choice = {
+        key: random.choice(params[key]) for key in params.keys()
+    }
     random_model = model_class(**random_param_choice)
 
     # perform backtest forecasting on both models

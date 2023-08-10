@@ -83,18 +83,16 @@ class ThresholdDetector(Detector):
         )
 
         raise_if(
-            all([lo is None for lo in self.low_threshold])
-            and all([hi is None for hi in self.high_threshold]),
+            all(lo is None for lo in self.low_threshold)
+            and all(hi is None for hi in self.high_threshold),
             "All provided threshold values are None.",
         )
 
         raise_if_not(
             all(
-                [
-                    l <= h
-                    for (l, h) in zip(self.low_threshold, self.high_threshold)
-                    if ((l is not None) and (h is not None))
-                ]
+                l <= h
+                for (l, h) in zip(self.low_threshold, self.high_threshold)
+                if ((l is not None) and (h is not None))
             ),
             "all values in `low_threshold` must be lower than or equal"
             + "to their corresponding value in `high_threshold`.",

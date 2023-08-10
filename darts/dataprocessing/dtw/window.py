@@ -120,7 +120,7 @@ class NoWindow(Window):
 
 
 def gtz(value):  # greater than zero
-    return value if value > 0 else 0
+    return max(value, 0)
 
 
 class CRWindow(Window):
@@ -170,7 +170,7 @@ class CRWindow(Window):
             ranges = ranges.flatten()
         else:
             ranges = np.zeros((n + 1) * 2, dtype=int)
-            ranges[0::2] = self.m  # start
+            ranges[::2] = self.m
             ranges[1::2] = 0  # end
             ranges = array.array("i", ranges)
 
@@ -234,10 +234,7 @@ class CRWindow(Window):
         i, j = elem
 
         start, end = self.column_ranges[i]
-        if j < start or j >= end:
-            return -1
-        else:
-            return j - start
+        return -1 if j < start or j >= end else j - start
 
     def __contains__(self, elem: Tuple[int, int]) -> bool:
         i, j = elem
@@ -381,10 +378,10 @@ class SakoeChiba(CRWindow):
         )
 
         ranges = np.repeat(np.arange(n), 2)
-        ranges[0::2] -= (self.window_size,)
+        ranges[::2] -= (self.window_size,)
         ranges[1::2] += self.window_size
 
-        ranges[0::2] = np.maximum(0, ranges[0::2])
+        ranges[::2] = np.maximum(0, ranges[::2])
         ranges[1::2] = np.minimum(self.m, ranges[1::2] + 1)
         ranges = np.reshape(ranges, (-1, 2))
 

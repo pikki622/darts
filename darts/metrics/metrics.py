@@ -154,15 +154,15 @@ def _get_values(
     with (stochastic_quantile {>=0,<=1})
     """
     if series.is_deterministic:
-        series_values = series.univariate_values()
+        return series.univariate_values()
     else:  # stochastic
-        if stochastic_quantile is None:
-            series_values = series.all_values(copy=False)
-        else:
-            series_values = series.quantile_timeseries(
+        return (
+            series.all_values(copy=False)
+            if stochastic_quantile is None
+            else series.quantile_timeseries(
                 quantile=stochastic_quantile
             ).univariate_values()
-    return series_values
+        )
 
 
 def _get_values_or_raise(
@@ -206,11 +206,7 @@ def _get_values_or_raise(
 
     raise_if_not(
         series_a_common.has_same_time_as(series_b_common),
-        "The two time series (or their intersection) "
-        "must have the same time index."
-        "\nFirst series: {}\nSecond series: {}".format(
-            series_a.time_index, series_b.time_index
-        ),
+        f"The two time series (or their intersection) must have the same time index.\nFirst series: {series_a.time_index}\nSecond series: {series_b.time_index}",
         logger,
     )
 
@@ -220,7 +216,7 @@ def _get_values_or_raise(
     if not remove_nan_union:
         return series_a_det, series_b_det
 
-    b_is_deterministic = bool(len(series_b_det.shape) == 1)
+    b_is_deterministic = len(series_b_det.shape) == 1
     if b_is_deterministic:
         isnan_mask = np.logical_or(np.isnan(series_a_det), np.isnan(series_b_det))
     else:
@@ -841,7 +837,7 @@ def mase(
             iterator=iterator,
             fn=_multivariate_mase,
             n_jobs=n_jobs,
-            fn_args=dict(),
+            fn_args={},
             fn_kwargs={"m": m, "intersect": intersect, "reduction": reduction},
         )
         return inter_reduction(value_list)

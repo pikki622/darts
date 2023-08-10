@@ -142,14 +142,15 @@ class _Block(nn.Module):
         # FC layers
         layers = []
         for i in range(self.num_layers):
-            layers.append(
-                nn.Linear(
-                    in_features=self.layer_widths[i],
-                    out_features=self.layer_widths[i + 1],
+            layers.extend(
+                (
+                    nn.Linear(
+                        in_features=self.layer_widths[i],
+                        out_features=self.layer_widths[i + 1],
+                    ),
+                    self.activation,
                 )
             )
-            layers.append(self.activation)
-
             if self.batch_norm:
                 layers.append(nn.BatchNorm1d(num_features=self.layer_widths[i + 1]))
 
@@ -712,7 +713,7 @@ class NHiTSModel(PastCovariatesTorchModel):
                 f"the length of {name} must match the number of stacks.",
             )
             raise_if_not(
-                all([len(i) == num_blocks for i in tup]),
+                all(len(i) == num_blocks for i in tup),
                 f"the length of each tuple in {name} must be `num_blocks={num_blocks}`",
             )
 

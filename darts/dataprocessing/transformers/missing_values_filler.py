@@ -68,7 +68,7 @@ class MissingValuesFiller(BaseDataTransformer):
         Dimensions without coordinates: sample
         """
         raise_if_not(
-            isinstance(fill, str) or isinstance(fill, float),
+            isinstance(fill, (str, float)),
             "`fill` should either be a string or a float",
             logger,
         )

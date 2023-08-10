@@ -261,7 +261,8 @@ class TimeSeriesStaticCovariateTestCase(DartsBaseTestClass):
         )
         assert ts_multi.static_covariates.columns.equals(static_covs.columns)
         np.testing.assert_almost_equal(
-            ts_multi.static_covariates_values(copy=False), static_covs.loc[0:0].values
+            ts_multi.static_covariates_values(copy=False),
+            static_covs.loc[:0].values,
         )
 
         # from multivariate static covariates
@@ -557,10 +558,10 @@ class TimeSeriesStaticCovariateTestCase(DartsBaseTestClass):
         self.helper_test_cov_transfer(ts, 3 + ts)
         self.helper_test_cov_transfer(ts, 3 - ts)
         # conditions
-        self.helper_test_cov_transfer_xa(ts, 3 > ts)
-        self.helper_test_cov_transfer_xa(ts, 3 >= ts)
-        self.helper_test_cov_transfer_xa(ts, 3 < ts)
-        self.helper_test_cov_transfer_xa(ts, 3 <= ts)
+        self.helper_test_cov_transfer_xa(ts, ts < 3)
+        self.helper_test_cov_transfer_xa(ts, ts <= 3)
+        self.helper_test_cov_transfer_xa(ts, ts > 3)
+        self.helper_test_cov_transfer_xa(ts, ts >= 3)
 
         # arithmetics with two series
         self.helper_test_cov_transfer(ts, ts / ts)

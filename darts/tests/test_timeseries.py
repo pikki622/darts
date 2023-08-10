@@ -165,7 +165,7 @@ class TimeSeriesTestCase(DartsBaseTestClass):
 
     def test_integer_indexing(self):
         n = 10
-        int_idx = pd.Index([i for i in range(n)])
+        int_idx = pd.Index(list(range(n)))
         assert not isinstance(int_idx, pd.RangeIndex)
 
         # test that integer index gets converted to correct RangeIndex
@@ -180,7 +180,7 @@ class TimeSeriesTestCase(DartsBaseTestClass):
 
         for step in [2, 3]:
             # test integer index with different step sizes, beginning at non-zero
-            int_idx = pd.Index([i for i in range(2, 2 + n * step, step)])
+            int_idx = pd.Index(list(range(2, 2 + n * step, step)))
             ts_from_int_idx = TimeSeries.from_times_and_values(
                 times=int_idx, values=vals
             )
@@ -190,7 +190,7 @@ class TimeSeriesTestCase(DartsBaseTestClass):
             assert ts_from_int_idx.freq == step
 
             # test integer index with unsorted indices
-            idx_permuted = [n - 1] + [i for i in range(1, n - 1, 1)] + [0]
+            idx_permuted = [n - 1] + list(range(1, n - 1, 1)) + [0]
             ts_from_int_idx2 = TimeSeries.from_times_and_values(
                 times=int_idx[idx_permuted], values=vals[idx_permuted]
             )
@@ -905,7 +905,7 @@ class TimeSeriesTestCase(DartsBaseTestClass):
         assert series.freq == freq
         assert series.start_time() == start
         assert series.end_time() == end
-        assert series[idx_int] == series == series[0 : len(series)]
+        assert series[idx_int] == series == series[:]
 
         series_single = series.drop_after(start + 2 * freq)
         assert (
@@ -1529,7 +1529,7 @@ class TimeSeriesTestCase(DartsBaseTestClass):
                 np.random.rand(10, 10, 1),
                 [
                     ("time", pd.date_range("2000-01-01", periods=10)),
-                    ("component", ["comp_" + str(i) for i in range(10)]),
+                    ("component", [f"comp_{str(i)}" for i in range(10)]),
                     ("sample", [0]),
                 ],
             )
@@ -1545,7 +1545,7 @@ class TimeSeriesTestCase(DartsBaseTestClass):
                 np.random.rand(10, 10, 10),
                 [
                     ("time", pd.date_range("2000-01-01", periods=10)),
-                    ("component", ["comp_" + str(i) for i in range(10)]),
+                    ("component", [f"comp_{str(i)}" for i in range(10)]),
                     ("sample", range(10)),
                 ],
             )
@@ -2112,7 +2112,7 @@ class TimeSeriesFromDataFrameTestCase(DartsBaseTestClass):
             # check that values are sorted accordingly:
             ar1 = ts.values(copy=False)[:, 0]
             ar2 = data_dict["Values1"][
-                list(expected_l.index(i * step) for i in range(len(expected)))
+                [expected_l.index(i * step) for i in range(len(expected))]
             ]
             self.assertTrue(np.all(ar1 == ar2))
 

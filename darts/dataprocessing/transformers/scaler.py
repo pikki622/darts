@@ -147,5 +147,4 @@ class Scaler(FittableDataTransformer, InvertibleDataTransformer):
         if isinstance(series, TimeSeries):
             series = [series]
         vals = np.concatenate([Scaler.stack_samples(ts) for ts in series], axis=0)
-        scaler = transformer.fit(vals)
-        return scaler
+        return transformer.fit(vals)

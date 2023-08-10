@@ -1139,11 +1139,8 @@ class ADAnomalyScorerTestCase(DartsBaseTestClass):
 
         for i in range(1, len(np_series)):
             np_series[i] = np_series[i - 1] + np.random.choice(a=[-1, 1], p=[0.5, 0.5])
-            if np_series[i] > 3:
-                np_series[i] = 3
-            if np_series[i] < 0:
-                np_series[i] = 0
-
+            np_series[i] = min(np_series[i], 3)
+            np_series[i] = max(np_series[i], 0)
         ts_train = TimeSeries.from_values(np_series, columns=["series"])
 
         # create the test set
@@ -1153,11 +1150,8 @@ class ADAnomalyScorerTestCase(DartsBaseTestClass):
 
         for i in range(1, len(np_series)):
             np_series[i] = np_series[i - 1] + np.random.choice(a=[-1, 1], p=[0.5, 0.5])
-            if np_series[i] > 3:
-                np_series[i] = 3
-            if np_series[i] < 0:
-                np_series[i] = 0
-
+            np_series[i] = min(np_series[i], 3)
+            np_series[i] = max(np_series[i], 0)
         # 3 anomalies per type
         # type 1: sudden shift between state 0 to state 2 without passing by state 1
         np_series[23] = 3
@@ -1442,11 +1436,8 @@ class ADAnomalyScorerTestCase(DartsBaseTestClass):
 
         for i in range(1, len(np_series)):
             np_series[i] = np_series[i - 1] + np.random.choice(a=[-1, 1], p=[0.5, 0.5])
-            if np_series[i] > 3:
-                np_series[i] = 3
-            if np_series[i] < 0:
-                np_series[i] = 0
-
+            np_series[i] = min(np_series[i], 3)
+            np_series[i] = max(np_series[i], 0)
         ts_train = TimeSeries.from_values(np_series, columns=["series"])
 
         # create the test set
@@ -1456,11 +1447,8 @@ class ADAnomalyScorerTestCase(DartsBaseTestClass):
 
         for i in range(1, len(np_series)):
             np_series[i] = np_series[i - 1] + np.random.choice(a=[-1, 1], p=[0.5, 0.5])
-            if np_series[i] > 3:
-                np_series[i] = 3
-            if np_series[i] < 0:
-                np_series[i] = 0
-
+            np_series[i] = min(np_series[i], 3)
+            np_series[i] = max(np_series[i], 0)
         # 3 anomalies per type
         # type 1: sudden shift between state 0 to state 2 without passing by state 1
         np_series[23] = 3
