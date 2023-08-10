@@ -85,9 +85,10 @@ if TORCH_AVAILABLE:
                 # "multiple",
             ]
             test_cases = self.helper_create_test_cases(series_options)
+            n_sc_expected = 2
             for series_option, cov_option, add_relative_idx, use_encoders in test_cases:
                 series, pc, fc = self.helper_get_input(series_option)
-                cov_test_case = dict()
+                cov_test_case = {}
                 use_pc, use_fc = False, False
                 if "past_covariates" in cov_option:
                     cov_test_case["past_covariates"] = pc
@@ -100,7 +101,6 @@ if TORCH_AVAILABLE:
                 n_target_expected = series.n_components
                 n_pc_expected = 1 if "past_covariates" in cov_test_case else 0
                 n_fc_expected = 1 if "future_covariates" in cov_test_case else 0
-                n_sc_expected = 2
                 # encoder is number of past and future covs plus 4 optional encodings (future and past)
                 # plus 1 univariate target plus 1 optional relative index
                 n_enc_expected = (
@@ -173,22 +173,18 @@ if TORCH_AVAILABLE:
                 dec_imp = result.get_decoder_importance()
                 stc_imp = result.get_static_covariates_importance()
                 imps = [enc_imp, dec_imp, stc_imp]
-                assert all([isinstance(imp, pd.DataFrame) for imp in imps])
+                assert all(isinstance(imp, pd.DataFrame) for imp in imps)
                 # importances must sum up to 100 percent
                 assert all(
-                    [
-                        imp.squeeze().sum() == pytest.approx(100.0, rel=0.2)
-                        for imp in imps
-                    ]
+                    imp.squeeze().sum() == pytest.approx(100.0, rel=0.2)
+                    for imp in imps
                 )
                 # importances must have the expected number of columns
                 assert all(
-                    [
-                        len(imp.columns) == n
-                        for imp, n in zip(
-                            imps, [n_enc_expected, n_dec_expected, n_sc_expected]
-                        )
-                    ]
+                    len(imp.columns) == n
+                    for imp, n in zip(
+                        imps, [n_enc_expected, n_dec_expected, n_sc_expected]
+                    )
                 )
 
                 attention = result.get_attention()
@@ -211,9 +207,10 @@ if TORCH_AVAILABLE:
 
             series_options = ["multiple"]
             test_cases = self.helper_create_test_cases(series_options)
+            n_sc_expected = 2
             for series_option, cov_option, add_relative_idx, use_encoders in test_cases:
                 series, pc, fc = self.helper_get_input(series_option)
-                cov_test_case = dict()
+                cov_test_case = {}
                 use_pc, use_fc = False, False
                 if "past_covariates" in cov_option:
                     cov_test_case["past_covariates"] = pc
@@ -226,7 +223,6 @@ if TORCH_AVAILABLE:
                 n_target_expected = series[0].n_components
                 n_pc_expected = 1 if "past_covariates" in cov_test_case else 0
                 n_fc_expected = 1 if "future_covariates" in cov_test_case else 0
-                n_sc_expected = 2
                 # encoder is number of past and future covs plus 4 optional encodings (future and past)
                 # plus 1 univariate target plus 1 optional relative index
                 n_enc_expected = (
@@ -291,51 +287,41 @@ if TORCH_AVAILABLE:
                 dec_imp = result.get_decoder_importance()
                 stc_imp = result.get_static_covariates_importance()
                 imps = [enc_imp, dec_imp, stc_imp]
-                assert all([isinstance(imp, list) for imp in imps])
-                assert all([len(imp) == len(series) for imp in imps])
-                assert all(
-                    [isinstance(imp_, pd.DataFrame) for imp in imps for imp_ in imp]
-                )
+                assert all(isinstance(imp, list) for imp in imps)
+                assert all(len(imp) == len(series) for imp in imps)
+                assert all(isinstance(imp_, pd.DataFrame) for imp in imps for imp_ in imp)
                 # importances must sum up to 100 percent
                 assert all(
-                    [
-                        imp_.squeeze().sum() == pytest.approx(100.0, abs=0.11)
-                        for imp in imps
-                        for imp_ in imp
-                    ]
+                    imp_.squeeze().sum() == pytest.approx(100.0, abs=0.11)
+                    for imp in imps
+                    for imp_ in imp
                 )
                 # importances must have the expected number of columns
                 assert all(
-                    [
-                        len(imp_.columns) == n
-                        for imp, n in zip(
-                            imps, [n_enc_expected, n_dec_expected, n_sc_expected]
-                        )
-                        for imp_ in imp
-                    ]
+                    len(imp_.columns) == n
+                    for imp, n in zip(
+                        imps, [n_enc_expected, n_dec_expected, n_sc_expected]
+                    )
+                    for imp_ in imp
                 )
 
                 attention = result.get_attention()
                 assert isinstance(attention, list)
                 assert len(attention) == len(series)
-                assert all([isinstance(att, TimeSeries) for att in attention])
+                assert all(isinstance(att, TimeSeries) for att in attention)
                 # input chunk length + output chunk length = 5 + 2 = 7
                 icl, ocl = 5, 2
                 freq = series[0].freq
-                assert all([len(att) == icl + ocl for att in attention])
+                assert all(len(att) == icl + ocl for att in attention)
                 assert all(
-                    [
-                        att.start_time() == series_.end_time() - (icl - 1) * freq
-                        for att, series_ in zip(attention, series)
-                    ]
+                    att.start_time() == series_.end_time() - (icl - 1) * freq
+                    for att, series_ in zip(attention, series)
                 )
                 assert all(
-                    [
-                        att.end_time() == series_.end_time() + ocl * freq
-                        for att, series_ in zip(attention, series)
-                    ]
+                    att.end_time() == series_.end_time() + ocl * freq
+                    for att, series_ in zip(attention, series)
                 )
-                assert all([att.n_components == ocl for att in attention])
+                assert all(att.n_components == ocl for att in attention)
 
         def test_variable_selection_explanation(self):
             """Test variable selection (feature importance) explanation results and plotting."""

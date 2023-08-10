@@ -303,7 +303,7 @@ def _eval_accuracy_from_data(
 
     s_data, s_anomalies = _intersect(s_data, s_anomalies)
 
-    if metric_name == "AUC_ROC" or metric_name == "AUC_PR":
+    if metric_name in {"AUC_ROC", "AUC_PR"}:
 
         nr_anomalies_per_component = (
             s_anomalies.sum(axis=0).values(copy=False).flatten()
@@ -322,20 +322,14 @@ def _eval_accuracy_from_data(
             ],
         )
 
-    # TODO: could we vectorize this?
-    metrics = []
-    for component_idx in range(s_data.width):
-        metrics.append(
-            metric_fn(
-                s_anomalies.all_values(copy=False)[:, component_idx],
-                s_data.all_values(copy=False)[:, component_idx],
-            )
+    metrics = [
+        metric_fn(
+            s_anomalies.all_values(copy=False)[:, component_idx],
+            s_data.all_values(copy=False)[:, component_idx],
         )
-
-    if len(metrics) == 1:
-        return metrics[0]
-    else:
-        return metrics
+        for component_idx in range(s_data.width)
+    ]
+    return metrics[0] if len(metrics) == 1 else metrics
 
 
 def _intersect(
@@ -371,9 +365,7 @@ def _assert_timeseries(series: TimeSeries, message: str = None):
 
     raise_if_not(
         isinstance(series, TimeSeries),
-        "{} must be type darts.timeseries.TimeSeries and not {}.".format(
-            message if message is not None else "Series input", type(series)
-        ),
+        f'{message if message is not None else "Series input"} must be type darts.timeseries.TimeSeries and not {type(series)}.',
     )
 
 
@@ -556,21 +548,20 @@ def show_anomalies_from_scores(
             f"Input `title` must be of type str, found {type(title)}.",
         )
 
-    nbr_plots = 1
-
     if model_output is not None:
         raise_if_not(
             isinstance(model_output, TimeSeries),
             f"Input `model_output` must be of type TimeSeries, found {type(model_output)}.",
         )
 
+    nbr_plots = 1
     if actual_anomalies is not None:
         raise_if_not(
             isinstance(actual_anomalies, TimeSeries),
             f"Input `actual_anomalies` must be of type TimeSeries, found {type(actual_anomalies)}.",
         )
 
-        nbr_plots = nbr_plots + 1
+        nbr_plots += 1
     else:
         raise_if_not(
             metric is None,
@@ -609,8 +600,7 @@ def show_anomalies_from_scores(
 
             raise_if_not(
                 len(names_of_scorers) == len(anomaly_scores),
-                "The number of names in `names_of_scorers` must match the number of anomaly score "
-                + f"given as input, found {len(names_of_scorers)} and expected {len(anomaly_scores)}.",
+                f"The number of names in `names_of_scorers` must match the number of anomaly score given as input, found {len(names_of_scorers)} and expected {len(anomaly_scores)}.",
             )
 
         if isinstance(window, int):
@@ -627,8 +617,7 @@ def show_anomalies_from_scores(
             )
 
         raise_if_not(
-            all([w > 0 for w in window]),
-            "All windows must be positive integer.",
+            all(w > 0 for w in window), "All windows must be positive integer."
         )
 
         if len(window) == 1:
@@ -636,16 +625,15 @@ def show_anomalies_from_scores(
         else:
             raise_if_not(
                 len(window) == len(anomaly_scores),
-                "The number of window in `window` must match the number of anomaly score given as input. One "
-                + f"window value for each series. Found length {len(window)}, and expected {len(anomaly_scores)}.",
+                f"The number of window in `window` must match the number of anomaly score given as input. One window value for each series. Found length {len(window)}, and expected {len(anomaly_scores)}.",
             )
 
         raise_if_not(
-            all([w < len(s) for (w, s) in zip(window, anomaly_scores)]),
+            all(w < len(s) for (w, s) in zip(window, anomaly_scores)),
             "All windows must be smaller than the length of their corresponding score.",
         )
 
-        nbr_plots = nbr_plots + len(set(window))
+        nbr_plots += len(set(window))
     else:
         if window is not None:
             logger.warning(
@@ -692,14 +680,12 @@ def show_anomalies_from_scores(
 
     if anomaly_scores is not None:
 
-        dict_input = {}
-
-        for idx, (score, w) in enumerate(zip(anomaly_scores, window)):
-
-            dict_input[idx] = {"series_score": score, "window": w, "name_id": idx}
-
+        dict_input = {
+            idx: {"series_score": score, "window": w, "name_id": idx}
+            for idx, (score, w) in enumerate(zip(anomaly_scores, window))
+        }
         current_window = window[0]
-        index_ax = index_ax + 1
+        index_ax += 1
 
         for elem in sorted(dict_input.items(), key=lambda x: x[1]["window"]):
 
@@ -793,9 +779,9 @@ def _plot_series(series, ax_id, linewidth, label_name, **kwargs):
             central_series = comp
 
         label_to_use = (
-            (label_name + ("_" + str(i) if len(series.components) > 1 else ""))
+            label_name + (f"_{str(i)}" if len(series.components) > 1 else "")
             if label_name != ""
-            else "" + str(str(c.values))
+            else f"{str(c.values)}"
         )
 
         central_series.plot(ax=ax_id, linewidth=linewidth, label=label_to_use, **kwargs)

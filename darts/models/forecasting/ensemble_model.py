@@ -69,12 +69,10 @@ class EnsembleModel(GlobalForecastingModel):
 
         raise_if_not(
             all(
-                [
-                    local_model or global_model
-                    for local_model, global_model in zip(
-                        is_local_model, is_global_model
-                    )
-                ]
+                local_model or global_model
+                for local_model, global_model in zip(
+                    is_local_model, is_global_model
+                )
             ),
             "All models must be of type `GlobalForecastingModel`, or `LocalForecastingModel`. "
             "Also, make sure that all models in `forecasting_model/models` are instantiated.",
@@ -82,7 +80,7 @@ class EnsembleModel(GlobalForecastingModel):
         )
 
         raise_if(
-            any([m._fit_called for m in models]),
+            any(m._fit_called for m in models),
             "Cannot instantiate EnsembleModel with trained/fitted models. "
             "Consider resetting all models with `my_model.untrained_model()`",
             logger,
@@ -91,7 +89,7 @@ class EnsembleModel(GlobalForecastingModel):
         raise_if(
             train_num_samples is not None
             and train_num_samples > 1
-            and all([not m._is_probabilistic for m in models]),
+            and all(not m._is_probabilistic for m in models),
             "`train_num_samples` is greater than 1 but the `RegressionEnsembleModel` "
             "contains only deterministic models.",
             logger,
@@ -387,14 +385,11 @@ class EnsembleModel(GlobalForecastingModel):
             if m.output_chunk_length is not None
         ]
 
-        if len(tmp) == 0:
-            return None
-        else:
-            return min(tmp)
+        return None if not tmp else min(tmp)
 
     @property
     def _models_are_probabilistic(self) -> bool:
-        return all([model._is_probabilistic for model in self.models])
+        return all(model._is_probabilistic for model in self.models)
 
     @property
     def _models_same_likelihood(self) -> bool:
@@ -439,21 +434,21 @@ class EnsembleModel(GlobalForecastingModel):
 
     @property
     def supports_multivariate(self) -> bool:
-        return all([model.supports_multivariate for model in self.models])
+        return all(model.supports_multivariate for model in self.models)
 
     @property
     def supports_past_covariates(self) -> bool:
-        return any([model.supports_past_covariates for model in self.models])
+        return any(model.supports_past_covariates for model in self.models)
 
     @property
     def supports_future_covariates(self) -> bool:
-        return any([model.supports_future_covariates for model in self.models])
+        return any(model.supports_future_covariates for model in self.models)
 
     def _full_past_covariates_support(self) -> bool:
-        return all([model.supports_past_covariates for model in self.models])
+        return all(model.supports_past_covariates for model in self.models)
 
     def _full_future_covariates_support(self) -> bool:
-        return all([model.supports_future_covariates for model in self.models])
+        return all(model.supports_future_covariates for model in self.models)
 
     def _verify_past_future_covariates(self, past_covariates, future_covariates):
         """

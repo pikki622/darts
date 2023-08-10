@@ -336,11 +336,10 @@ class InvertibleDataTransformer(BaseDataTransformer):
         )
 
         if self._mask_components:
-            unmasked = []
-            for ts, transformed_ts in zip(input_series, transformed_data):
-                unmasked.append(
-                    self.unapply_component_mask(ts, transformed_ts, component_mask)
-                )
+            unmasked = [
+                self.unapply_component_mask(ts, transformed_ts, component_mask)
+                for ts, transformed_ts in zip(input_series, transformed_data)
+            ]
             transformed_data = unmasked
 
         return (

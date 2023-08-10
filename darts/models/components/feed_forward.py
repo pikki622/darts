@@ -107,11 +107,7 @@ class FeedForward(nn.Module):
         # $f(x W_1 + b_1)$
         g = self.activation(self.layer1(x))
         # If gated, $f(x W_1 + b_1) \otimes (x V + b) $
-        if self.is_gated:
-            x = g * self.linear_v(x)
-        # Otherwise
-        else:
-            x = g
+        x = g * self.linear_v(x) if self.is_gated else g
         # Apply dropout
         x = self.dropout(x)
         # $(f(x W_1 + b_1) \otimes (x V + b)) W_2 + b_2$ or $f(x W_1 + b_1) W_2 + b_2$

@@ -1196,7 +1196,7 @@ class HistoricalforecastTestCase(DartsBaseTestClass):
 
         # Past and future covariates
         for model_cls, kwargs, bounds, type in models_torch_cls_kwargs:
-            if not type == "MixedCovariates":
+            if type != "MixedCovariates":
                 continue
 
             model = model_cls(
@@ -1257,7 +1257,7 @@ class HistoricalforecastTestCase(DartsBaseTestClass):
         # Future covariates only
         for model_cls, kwargs, bounds, type in models_torch_cls_kwargs:
             # todo case of DualCovariates (RNN)
-            if type == "PastCovariates" or type == "DualCovariates":
+            if type in ["PastCovariates", "DualCovariates"]:
                 continue
 
             model = model_cls(
@@ -1329,12 +1329,9 @@ class HistoricalforecastTestCase(DartsBaseTestClass):
             return False
 
         def retrain_f_missing_arg(
-            counter, train_series, past_covariates, future_covariates
-        ):
-            if len(train_series) % 2 == 0:
-                return True
-            else:
-                return False
+                counter, train_series, past_covariates, future_covariates
+            ):
+            return len(train_series) % 2 == 0
 
         def retrain_f_invalid_ouput_int(
             counter, pred_time, train_series, past_covariates, future_covariates
@@ -1347,21 +1344,15 @@ class HistoricalforecastTestCase(DartsBaseTestClass):
             return "True"
 
         def retrain_f_valid(
-            counter, pred_time, train_series, past_covariates, future_covariates
-        ):
+                counter, pred_time, train_series, past_covariates, future_covariates
+            ):
             # only retrain once in first iteration
-            if pred_time == pd.Timestamp("1959-09-01 00:00:00"):
-                return True
-            else:
-                return False
+            return pred_time == pd.Timestamp("1959-09-01 00:00:00")
 
         def retrain_f_delayed_true(
-            counter, pred_time, train_series, past_covariates, future_covariates
-        ):
-            if counter > 1:
-                return True
-            else:
-                return False
+                counter, pred_time, train_series, past_covariates, future_covariates
+            ):
+            return counter > 1
 
         # test callable
         helper_hist_forecasts(retrain_f_valid, 0.9)
@@ -1432,19 +1423,18 @@ class HistoricalforecastTestCase(DartsBaseTestClass):
                     quantiles=[0.05, 0.4, 0.5, 0.6, 0.95] if use_ll else None,
                     output_chunk_length=ocl,
                 )
-            else:  # model_type == "torch"
-                if not TORCH_AVAILABLE:
-                    return None
-                return NLinearModel(
-                    input_chunk_length=3,
-                    likelihood=QuantileRegression([0.05, 0.4, 0.5, 0.6, 0.95])
-                    if use_ll
-                    else None,
-                    output_chunk_length=ocl,
-                    n_epochs=1,
-                    random_state=42,
-                    **tfm_kwargs,
-                )
+            if not TORCH_AVAILABLE:
+                return None
+            return NLinearModel(
+                input_chunk_length=3,
+                likelihood=QuantileRegression([0.05, 0.4, 0.5, 0.6, 0.95])
+                if use_ll
+                else None,
+                output_chunk_length=ocl,
+                n_epochs=1,
+                random_state=42,
+                **tfm_kwargs,
+            )
 
         for model_type in ["regression", "torch"]:
             model = create_model(1, False, model_type=model_type)

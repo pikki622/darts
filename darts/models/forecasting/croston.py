@@ -77,7 +77,7 @@ class Croston(FutureCovariatesLocalForecastingModel):
         """
         super().__init__(add_encoders=add_encoders)
         raise_if_not(
-            version.lower() in ["classic", "optimized", "sba", "tsb"],
+            version.lower() in {"classic", "optimized", "sba", "tsb"},
             'The provided "version" parameter must be set to "classic", "optimized", "sba" or "tsb".',
         )
 

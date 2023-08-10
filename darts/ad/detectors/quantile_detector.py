@@ -79,7 +79,7 @@ class QuantileDetector(FittableDetector):
 
         for q in (low, high):
             raise_if_not(
-                all([x is None or 0 <= x <= 1 for x in q]),
+                all(x is None or 0 <= x <= 1 for x in q),
                 "Quantiles must be between 0 and 1, or None.",
             )
 
@@ -100,18 +100,16 @@ class QuantileDetector(FittableDetector):
         )
 
         raise_if(
-            all([lo is None for lo in self.low_quantile])
-            and all([hi is None for hi in self.high_quantile]),
+            all(lo is None for lo in self.low_quantile)
+            and all(hi is None for hi in self.high_quantile),
             "All provided quantile values are None.",
         )
 
         raise_if_not(
             all(
-                [
-                    l <= h
-                    for (l, h) in zip(self.low_quantile, self.high_quantile)
-                    if ((l is not None) and (h is not None))
-                ]
+                l <= h
+                for (l, h) in zip(self.low_quantile, self.high_quantile)
+                if ((l is not None) and (h is not None))
             ),
             "all values in `low_quantile` must be lower than or equal"
             + "to their corresponding value in `high_quantile`.",

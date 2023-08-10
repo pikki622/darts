@@ -890,14 +890,14 @@ class SequentialEncoderTransformer:
                 )
             self._fit_called = True
 
-        if any(self.transform_mask):
-            transformed = [
+        return (
+            [
                 self.transformer.transform(cov, component_mask=self.transform_mask)
                 for cov in covariates
             ]
-        else:
-            transformed = covariates
-        return transformed
+            if any(self.transform_mask)
+            else covariates
+        )
 
     def _update_mask(self, covariates: List[TimeSeries]) -> None:
         """if user supplied additional covariates to model.fit() or model.predict(), `self.transform_mask` has to be
@@ -906,10 +906,7 @@ class SequentialEncoderTransformer:
         `covariates`.
         """
 
-        n_diff = covariates[0].width - len(self.transform_mask)
-        if not n_diff:
-            pass
-        else:
+        if n_diff := covariates[0].width - len(self.transform_mask):
             self.transform_mask = np.array([False] * n_diff + list(self.transform_mask))
 
     @property

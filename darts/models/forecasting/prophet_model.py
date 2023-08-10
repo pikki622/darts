@@ -130,7 +130,7 @@ class Prophet(FutureCovariatesLocalForecastingModel):
 
         self._auto_seasonalities = self._extract_auto_seasonality(prophet_kwargs)
 
-        self._add_seasonalities = dict()
+        self._add_seasonalities = {}
         add_seasonality_calls = (
             add_seasonalities
             if isinstance(add_seasonalities, list)
@@ -330,7 +330,7 @@ class Prophet(FutureCovariatesLocalForecastingModel):
                     continue
                 conditional_seasonality_covariates.append(condition_name)
 
-        if len(invalid_conditional_seasonalities) > 0:
+        if invalid_conditional_seasonalities:
             formatted_issues_str = ", ".join(
                 f"'{name}' (condition_name: '{cond}'; issue: {reason})"
                 for name, cond, reason in invalid_conditional_seasonalities
@@ -367,9 +367,9 @@ class Prophet(FutureCovariatesLocalForecastingModel):
 
         if predict_df is None:
             predict_df = self.model.history.copy()
+        elif predict_df.shape[0] == 0:
+            raise ValueError("Dataframe has no rows.")
         else:
-            if predict_df.shape[0] == 0:
-                raise ValueError("Dataframe has no rows.")
             predict_df = self.model.setup_dataframe(predict_df.copy())
 
         predict_df["trend"] = self.model.predict_trend(predict_df)
@@ -535,7 +535,7 @@ class Prophet(FutureCovariatesLocalForecastingModel):
         auto_seasonalities = []
         for auto_seasonality in ["daily", "weekly", "yearly"]:
             s_name = auto_seasonality + "_seasonality"
-            if not (s_name in prophet_kwargs and not prophet_kwargs[s_name]):
+            if s_name not in prophet_kwargs or prophet_kwargs[s_name]:
                 auto_seasonalities.append(auto_seasonality)
         return auto_seasonalities
 
@@ -590,9 +590,7 @@ class Prophet(FutureCovariatesLocalForecastingModel):
             days = 1 / (seconds_per_day * 10**9)
         else:
             raise ValueError(
-                "freq {} not understood. Please report if you think this is in error.".format(
-                    freq
-                )
+                f"freq {freq} not understood. Please report if you think this is in error."
             )
         return freq_times * days
 

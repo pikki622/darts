@@ -45,10 +45,7 @@ class _ResidualBlock(nn.Module):
         self.skip = nn.Linear(input_dim, output_dim)
 
         # layer normalization as output
-        if use_layer_norm:
-            self.layer_norm = nn.LayerNorm(output_dim)
-        else:
-            self.layer_norm = None
+        self.layer_norm = nn.LayerNorm(output_dim) if use_layer_norm else None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 

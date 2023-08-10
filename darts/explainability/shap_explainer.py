@@ -414,7 +414,7 @@ class ShapExplainer(_ForecastingModelExplainer):
 
         for t in target_components:
             for h in horizons:
-                plt.title("Target: `{}` - Horizon: {}".format(t, "t+" + str(h)))
+                plt.title(f"Target: `{t}` - Horizon: t+{str(h)}")
                 shap.summary_plot(
                     shaps_[h][t],
                     foreground_X_sampled,
@@ -583,10 +583,7 @@ class _RegressionShapExplainers:
         self.background_past_covariates = background_past_covariates
         self.background_future_covariates = background_future_covariates
 
-        self.single_output = False
-        if self.n == 1 and self.target_dim == 1:
-            self.single_output = True
-
+        self.single_output = self.n == 1 and self.target_dim == 1
         self.background_X = self._create_regression_model_shap_X(
             self.background_series,
             self.background_past_covariates,
@@ -726,7 +723,7 @@ class _RegressionShapExplainers:
                 + ", ".join([e.value for e in _ShapMethod])
             )
 
-        logger.info("The shap method used is of type: " + str(type(explainer)))
+        logger.info(f"The shap method used is of type: {str(type(explainer))}")
 
         return explainer
 

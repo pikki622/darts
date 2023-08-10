@@ -118,12 +118,10 @@ def _get_checkpoint_fname(work_dir, model_name, best=False):
     path = os.path.join(checkpoint_dir, "best-*" if best else "last-*")
 
     checklist = glob(path)
-    if len(checklist) == 0:
+    if not checklist:
         raise_log(
             FileNotFoundError(
-                "There is no file matching prefix {} in {}".format(
-                    "best-*" if best else "last-*", checkpoint_dir
-                )
+                f'There is no file matching prefix {"best-*" if best else "last-*"} in {checkpoint_dir}'
             ),
             logger,
         )
@@ -286,7 +284,7 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
         # get model name and work dir
         if model_name is None:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H_%M_%S")
-            model_name = current_time + "_torch_model_run_" + str(os.getpid())
+            model_name = f"{current_time}_torch_model_run_{os.getpid()}"
 
         self.model_name = model_name
         self.work_dir = work_dir
@@ -312,9 +310,6 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
             self.reset_model()
         elif save_checkpoints:
             self._create_save_dirs()
-        else:
-            pass
-
         # save best epoch on val_loss and last epoch under 'darts_logs/model_name/checkpoints/'
         if save_checkpoints:
             checkpoint_callback = pl.callbacks.ModelCheckpoint(
@@ -345,9 +340,7 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
 
         # update trainer parameters with user defined `pl_trainer_kwargs`
         if pl_trainer_kwargs is not None:
-            pl_trainer_kwargs_copy = {
-                key: val for key, val in pl_trainer_kwargs.items()
-            }
+            pl_trainer_kwargs_copy = dict(pl_trainer_kwargs.items())
             self.n_epochs = pl_trainer_kwargs_copy.get("max_epochs", self.n_epochs)
             self.trainer_params["callbacks"] += pl_trainer_kwargs_copy.pop(
                 "callbacks", []
@@ -506,7 +499,7 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
         if trainer is not None:
             return trainer
 
-        trainer_params = {key: val for key, val in self.trainer_params.items()}
+        trainer_params = dict(self.trainer_params.items())
         if verbose is not None:
             trainer_params["enable_model_summary"] = (
                 verbose if model.epochs_trained == 0 else False
@@ -520,15 +513,15 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
         trainer_params: dict, max_epochs: Optional[int] = None
     ) -> pl.Trainer:
         """Initializes a PyTorch-Lightning trainer for training or prediction from `trainer_params`."""
-        trainer_params_copy = {key: val for key, val in trainer_params.items()}
+        trainer_params_copy = dict(trainer_params)
         if max_epochs is not None:
             trainer_params_copy["max_epochs"] = max_epochs
 
         # prevent lightning from adding callbacks to the callbacks list in `self.trainer_params`
         callbacks = trainer_params_copy.pop("callbacks", None)
         return pl.Trainer(
-            callbacks=[cb for cb in callbacks] if callbacks is not None else callbacks,
-            **trainer_params_copy,
+            callbacks=list(callbacks) if callbacks is not None else callbacks,
+            **trainer_params_copy
         )
 
     @abstractmethod
@@ -825,11 +818,11 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
         except ValueError:
             length_ok = False
         raise_if(
-            not length_ok or len(train_dataset) == 0,  # mind the order
-            "The train dataset does not contain even one training sample. "
-            + "This is likely due to the provided training series being too short. "
-            + "This model expect series of length at least {}.".format(
-                self.min_train_series_length
+            not length_ok or len(train_dataset) == 0,
+            (
+                "The train dataset does not contain even one training sample. "
+                + "This is likely due to the provided training series being too short. "
+                + f"This model expect series of length at least {self.min_train_series_length}."
             ),
         )
         logger.info(f"Train dataset contains {len(train_dataset)} samples.")
@@ -954,10 +947,7 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
             # Check existing model has input/output dims matching what's provided in the training set.
             raise_if_not(
                 len(train_sample) == len(self.train_sample),
-                "The size of the training set samples (tuples) does not match what the model has been "
-                "previously trained on. Trained on tuples of length {}, received tuples of length {}.".format(
-                    len(self.train_sample), len(train_sample)
-                ),
+                f"The size of the training set samples (tuples) does not match what the model has been previously trained on. Trained on tuples of length {len(self.train_sample)}, received tuples of length {len(train_sample)}.",
             )
             same_dims = tuple(
                 s.shape[1] if s is not None else None for s in train_sample
@@ -1287,7 +1277,7 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
                 )
             series = self.training_series
 
-        called_with_single_series = True if isinstance(series, TimeSeries) else False
+        called_with_single_series = isinstance(series, TimeSeries)
 
         # guarantee that all inputs are either list of TimeSeries or None
         series = series2seq(series)
@@ -1538,14 +1528,14 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
         """
         if path is None:
             # default path
-            path = self._default_save_path() + ".pt"
+            path = f"{self._default_save_path()}.pt"
 
         # save the TorchForecastingModel (does not save the PyTorch LightningModule, and Trainer)
         with open(path, "wb") as f_out:
             torch.save(self, f_out)
 
         # save the LightningModule checkpoint
-        path_ptl_ckpt = path + ".ckpt"
+        path_ptl_ckpt = f"{path}.ckpt"
         if self.trainer is not None:
             self.trainer.save_checkpoint(path_ptl_ckpt)
         # TODO: keep track of PyTorch Lightning to see if they implement model checkpoint saving
@@ -1606,7 +1596,7 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
             )
 
         # if a checkpoint was saved, we also load the PyTorch LightningModule from checkpoint
-        path_ptl_ckpt = path + ".ckpt"
+        path_ptl_ckpt = f"{path}.ckpt"
         if os.path.exists(path_ptl_ckpt):
             model.model = model._load_from_checkpoint(path_ptl_ckpt, **kwargs)
         else:
@@ -1784,7 +1774,7 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
             torch.load.html>`_.
         """
         raise_if(
-            "weights_only" in kwargs.keys() and kwargs["weights_only"],
+            "weights_only" in kwargs and kwargs["weights_only"],
             "Passing `weights_only=True` to `torch.load` will disrupt this"
             " method sanity checks.",
             logger,
@@ -1803,11 +1793,10 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
             file_name = _get_checkpoint_fname(work_dir, model_name, best=best)
 
         # checkpoints generated by PL, prefix is defined in TorchForecastingModel __init__()
-        if file_name[:5] == "last-" or file_name[:5] == "best-":
+        if file_name[:5] in ["last-", "best-"]:
             checkpoint_dir = _get_checkpoint_folder(work_dir, model_name)
             tfm_save_file_dir = _get_runs_folder(work_dir, model_name)
             tfm_save_file_name = INIT_MODEL_NAME
-        # manual save
         else:
             checkpoint_dir = ""
             tfm_save_file_dir = checkpoint_dir
@@ -1906,7 +1895,7 @@ class TorchForecastingModel(GlobalForecastingModel, ABC):
             torch.load.html>`_.
 
         """
-        path_ptl_ckpt = path + ".ckpt"
+        path_ptl_ckpt = f"{path}.ckpt"
         raise_if_not(
             os.path.exists(path_ptl_ckpt),
             f"Could not find PyTorch LightningModule checkpoint {path_ptl_ckpt}.",

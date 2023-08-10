@@ -52,7 +52,7 @@ def _generate_coder(
     ffn = (
         dict(ffn=ffn_cls(d_model=d_model, d_ff=dim_ff, dropout=dropout))
         if ffn_cls
-        else dict()
+        else {}
     )
     layer = layer_cls(
         **ffn,
@@ -311,11 +311,9 @@ class _TransformerModule(PLPastCovariatesModule):
         # from (1, batch_size, output_chunk_length * output_size)
         # to (batch_size, output_chunk_length, output_size, nr_params)
         predictions = out[0, :, :]
-        predictions = predictions.view(
+        return predictions.view(
             -1, self.target_length, self.target_size, self.nr_params
         )
-
-        return predictions
 
 
 class TransformerModel(PastCovariatesTorchModel):

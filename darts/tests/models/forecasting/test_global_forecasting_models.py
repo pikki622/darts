@@ -289,8 +289,7 @@ if TORCH_AVAILABLE:
                 mape_err = mape(self.ts_pass_val, pred)
                 self.assertTrue(
                     mape_err < err,
-                    "Model {} produces errors too high (one time "
-                    "series). Error = {}".format(model_cls, mape_err),
+                    f"Model {model_cls} produces errors too high (one time series). Error = {mape_err}",
                 )
                 self.assertTrue(
                     pred.static_covariates.equals(self.ts_passengers.static_covariates)
@@ -312,8 +311,7 @@ if TORCH_AVAILABLE:
                 mape_err = mape(self.ts_pass_val, pred)
                 self.assertTrue(
                     mape_err < err,
-                    "Model {} produces errors too high (several time "
-                    "series). Error = {}".format(model_cls, mape_err),
+                    f"Model {model_cls} produces errors too high (several time series). Error = {mape_err}",
                 )
 
                 # check prediction for several time series
@@ -328,8 +326,7 @@ if TORCH_AVAILABLE:
                     mape_err = mape(self.ts_pass_val, pred)
                     self.assertTrue(
                         mape_err < err,
-                        "Model {} produces errors too high (several time series 2). "
-                        "Error = {}".format(model_cls, mape_err),
+                        f"Model {model_cls} produces errors too high (several time series 2). Error = {mape_err}",
                     )
 
         def test_covariates(self):
@@ -387,8 +384,7 @@ if TORCH_AVAILABLE:
                 mape_err = mape(self.ts_pass_val, pred)
                 self.assertTrue(
                     mape_err < err,
-                    "Model {} produces errors too high (several time "
-                    "series with covariates). Error = {}".format(model_cls, mape_err),
+                    f"Model {model_cls} produces errors too high (several time series with covariates). Error = {mape_err}",
                 )
 
                 # when model is fit using 1 training and 1 covariate series, time series args are optional

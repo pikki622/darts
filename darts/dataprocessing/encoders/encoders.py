@@ -1265,7 +1265,7 @@ class SequentialEncoder(Encoder):
     def encoder_map(self) -> Dict:
         """Mapping between encoder identifier string (from parameters at model creations) and the corresponding
         future or past covariates encoder"""
-        mapper = {
+        return {
             "cyclic_past": PastCyclicEncoder,
             "cyclic_future": FutureCyclicEncoder,
             "datetime_attribute_past": PastDatetimeAttributeEncoder,
@@ -1275,7 +1275,6 @@ class SequentialEncoder(Encoder):
             "custom_past": PastCallableIndexEncoder,
             "custom_future": FutureCallableIndexEncoder,
         }
-        return mapper
 
     def _setup_encoders(self, params: Dict) -> None:
         """Sets up/Initializes all past and future encoders and an optional transformer from `add_encoder` parameter
@@ -1382,8 +1381,8 @@ class SequentialEncoder(Encoder):
         }
 
         # check input for invalid temporal types
-        invalid_time_params = list()
-        for encoder, t_types in encoders.items():
+        invalid_time_params = []
+        for t_types in encoders.values():
             invalid_time_params += [
                 t_type for t_type in t_types.keys() if t_type not in VALID_TIME_PARAMS
             ]
@@ -1396,7 +1395,7 @@ class SequentialEncoder(Encoder):
         )
 
         # convert into tuples of (encoder string identifier, encoder attribute)
-        past_encoders, future_encoders = list(), list()
+        past_encoders, future_encoders = [], []
         for enc, enc_params in encoders.items():
             for enc_time, enc_attr in enc_params.items():
                 raise_if_not(
@@ -1470,5 +1469,5 @@ class SequentialEncoder(Encoder):
     @property
     def requires_fit(self) -> bool:
         return any(
-            [enc.requires_fit for cov_enc in self.encoders for enc in cov_enc]
-        ) or any([tf is not None for tf in self.transformers()])
+            enc.requires_fit for cov_enc in self.encoders for enc in cov_enc
+        ) or any(tf is not None for tf in self.transformers())

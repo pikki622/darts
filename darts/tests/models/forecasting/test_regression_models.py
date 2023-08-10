@@ -547,23 +547,18 @@ class RegressionModelsTestCase(DartsBaseTestClass):
         }
 
         for mode in multi_models_modes:
-            if mode:
-                shift = 0
-            else:
-                shift = output_chunk_length - 1
-
+            shift = 0 if mode else output_chunk_length - 1
             # dictionary containing covariate data over time span required for prediction
             covariate_matrices = {}
             # dictionary containing covariate lags relative to minimum covariate lag
             relative_cov_lags = {}
             # number of prediction steps given forecast horizon and output_chunk_length
             n_pred_steps = math.ceil(n / output_chunk_length)
-            remaining_steps = n % output_chunk_length  # for multi_models = False
             for cov_type, (covs, lags) in covariates.items():
                 if covs is not None:
                     relative_cov_lags[cov_type] = np.array(lags) - lags[0]
                     covariate_matrices[cov_type] = []
-                    for idx, (ts, cov) in enumerate(zip(series, covs)):
+                    for ts, cov in zip(series, covs):
                         first_pred_ts = ts.end_time() + 1 * ts.freq
                         last_pred_ts = (
                             (
@@ -602,7 +597,9 @@ class RegressionModelsTestCase(DartsBaseTestClass):
                 )
             # prediction preprocessing end
             self.assertTrue(
-                all([lag >= 0 for lags in relative_cov_lags.values() for lag in lags])
+                all(
+                    lag >= 0 for lags in relative_cov_lags.values() for lag in lags
+                )
             )
 
             if mode:
@@ -674,6 +671,7 @@ class RegressionModelsTestCase(DartsBaseTestClass):
                 )
                 self.assertListEqual(list(series_matrix[0, :, 0]), [48.0, 49.0, 50.0])
             else:
+                remaining_steps = n % output_chunk_length  # for multi_models = False
                 # tests for multi_models = False
                 self.assertEqual(
                     covariate_matrices["past"].shape,
@@ -1234,8 +1232,8 @@ class RegressionModelsTestCase(DartsBaseTestClass):
 
     def test_regression_model(self):
         multi_models_modes = [True, False]
+        lags = 4
         for mode in multi_models_modes:
-            lags = 4
             models = [
                 RegressionModel(lags=lags, multi_models=mode),
                 RegressionModel(lags=lags, model=LinearRegression(), multi_models=mode),
@@ -1254,9 +1252,9 @@ class RegressionModelsTestCase(DartsBaseTestClass):
 
     def test_multiple_ts(self):
         multi_models_modes = [True, False]
+        lags = 4
+        lags_past_covariates = 3
         for mode in multi_models_modes:
-            lags = 4
-            lags_past_covariates = 3
             model = RegressionModel(
                 lags=lags, lags_past_covariates=lags_past_covariates, multi_models=mode
             )
@@ -1861,68 +1859,48 @@ class RegressionModelsTestCase(DartsBaseTestClass):
         if train_past is None:
             assert infer_past is None and refer_past is None
         else:
-            assert all(
-                [isinstance(el, list) for el in [train_past, infer_past, refer_past]]
-            )
+            assert all(isinstance(el, list) for el in [train_past, infer_past, refer_past])
             assert len(train_past) == len(infer_past) == len(refer_past)
             assert all(
-                [
-                    t_p.start_time() == tp_s
-                    for t_p, tp_s in zip(train_past, t_train["pc_start"])
-                ]
+                t_p.start_time() == tp_s
+                for t_p, tp_s in zip(train_past, t_train["pc_start"])
             )
             assert all(
-                [
-                    t_p.end_time() == tp_e
-                    for t_p, tp_e in zip(train_past, t_train["pc_end"])
-                ]
+                t_p.end_time() == tp_e
+                for t_p, tp_e in zip(train_past, t_train["pc_end"])
             )
             assert all(
-                [
-                    i_p.start_time() == ip_s
-                    for i_p, ip_s in zip(infer_past, t_infer["pc_start"])
-                ]
+                i_p.start_time() == ip_s
+                for i_p, ip_s in zip(infer_past, t_infer["pc_start"])
             )
             assert all(
-                [
-                    i_p.end_time() == ip_e
-                    for i_p, ip_e in zip(infer_past, t_infer["pc_end"])
-                ]
+                i_p.end_time() == ip_e
+                for i_p, ip_e in zip(infer_past, t_infer["pc_end"])
             )
 
         if train_future is None:
             assert infer_future is None and refer_future is None
         else:
             assert all(
-                [
-                    isinstance(el, list)
-                    for el in [train_future, infer_future, refer_future]
-                ]
+                isinstance(el, list)
+                for el in [train_future, infer_future, refer_future]
             )
             assert len(train_future) == len(infer_future) == len(refer_future)
             assert all(
-                [
-                    t_f.start_time() == tf_s
-                    for t_f, tf_s in zip(train_future, t_train["fc_start"])
-                ]
+                t_f.start_time() == tf_s
+                for t_f, tf_s in zip(train_future, t_train["fc_start"])
             )
             assert all(
-                [
-                    t_f.end_time() == tf_e
-                    for t_f, tf_e in zip(train_future, t_train["fc_end"])
-                ]
+                t_f.end_time() == tf_e
+                for t_f, tf_e in zip(train_future, t_train["fc_end"])
             )
             assert all(
-                [
-                    i_f.start_time() == if_s
-                    for i_f, if_s in zip(infer_future, t_infer["fc_start"])
-                ]
+                i_f.start_time() == if_s
+                for i_f, if_s in zip(infer_future, t_infer["fc_start"])
             )
             assert all(
-                [
-                    i_f.end_time() == if_e
-                    for i_f, if_e in zip(infer_future, t_infer["fc_end"])
-                ]
+                i_f.end_time() == if_e
+                for i_f, if_e in zip(infer_future, t_infer["fc_end"])
             )
 
     @staticmethod
@@ -2044,10 +2022,8 @@ class RegressionModelsTestCase(DartsBaseTestClass):
             rmses_no_cat = rmse(train_series_cat, preds_no_cat)
             rmses_cat = rmse(train_series_cat, preds_cat)
             assert all(
-                [
-                    rmse_no_cat > rmse_cat
-                    for rmse_no_cat, rmse_cat in zip(rmses_no_cat, rmses_cat)
-                ]
+                rmse_no_cat > rmse_cat
+                for rmse_no_cat, rmse_cat in zip(rmses_no_cat, rmses_cat)
             )
 
     @unittest.skipUnless(lgbm_available, "requires lightgbm")

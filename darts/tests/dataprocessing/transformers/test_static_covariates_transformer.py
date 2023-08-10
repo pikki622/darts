@@ -186,13 +186,11 @@ class StaticCovariatesTransformerTestCase(DartsBaseTestClass):
     def helper_test_scaling(self, series, scaler, test_values):
         series_tr = scaler.fit_transform(series)
         assert all(
-            [
-                a == b
-                for a, b in zip(
-                    series_tr.static_covariates_values().flatten(),
-                    test_values.flatten(),
-                )
-            ]
+            a == b
+            for a, b in zip(
+                series_tr.static_covariates_values().flatten(),
+                test_values.flatten(),
+            )
         )
 
         series_recovered = scaler.inverse_transform(series_tr)

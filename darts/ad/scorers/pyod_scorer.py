@@ -113,7 +113,7 @@ class PyODScorer(FittableAnomalyScorer):
         )
 
     def __str__(self):
-        return "PyODScorer (model {})".format(self.model.__str__().split("(")[0])
+        return f'PyODScorer (model {self.model.__str__().split("(")[0]})'
 
     def _fit_core(self, list_series: Sequence[TimeSeries]):
 
@@ -156,10 +156,13 @@ class PyODScorer(FittableAnomalyScorer):
 
         raise_if_not(
             self.width_trained_on == series.width,
-            "Input must have the same number of components as the data used for training"
-            + " the PyODScorer model {},".format(self.model.__str__().split("(")[0])
-            + f" found number of components equal to {series.width} and expected "
-            + f"{self.width_trained_on}.",
+            (
+                (
+                    f'Input must have the same number of components as the data used for training the PyODScorer model {self.model.__str__().split("(")[0]},'
+                    + f" found number of components equal to {series.width} and expected "
+                )
+                + f"{self.width_trained_on}."
+            ),
         )
 
         np_series = series.all_values(copy=False)

@@ -105,31 +105,22 @@ class FilteringAnomalyModel(AnomalyModel):
         list_series = _to_list(series)
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_series]),
+            all(isinstance(s, TimeSeries) for s in list_series),
             "all input `series` must be of type Timeseries.",
         )
 
         if allow_model_training:
-            # fit filtering model
-            if hasattr(self.filter, "fit"):
-                # TODO: check if filter is already fitted (for now fit it regardless -> only Kalman)
-                raise_if_not(
-                    len(list_series) == 1,
-                    f"Filter model {self.model.__class__.__name__} can only be fitted on a"
-                    + " single time series, but multiple are provided.",
-                )
-
-                self.filter.fit(list_series[0], **filter_fit_kwargs)
-            else:
+            if not hasattr(self.filter, "fit"):
                 raise ValueError(
-                    "`allow_filter_training` was set to True, but the filter"
-                    + f" {self.model.__class__.__name__} has no fit() method."
+                    f"`allow_filter_training` was set to True, but the filter {self.model.__class__.__name__} has no fit() method."
                 )
-        else:
-            # TODO: check if Kalman is fitted or not
-            # if not raise error "fit filter before, or set `allow_filter_training` to TRUE"
-            pass
+                # TODO: check if filter is already fitted (for now fit it regardless -> only Kalman)
+            raise_if_not(
+                len(list_series) == 1,
+                f"Filter model {self.model.__class__.__name__} can only be fitted on a single time series, but multiple are provided.",
+            )
 
+            self.filter.fit(list_series[0], **filter_fit_kwargs)
         if self.scorers_are_trainable:
             list_pred = [self.filter.filter(series) for series in list_series]
 
@@ -272,10 +263,7 @@ class FilteringAnomalyModel(AnomalyModel):
         if len(list_pred) == 1:
             list_pred = list_pred[0]
 
-        if return_model_prediction:
-            return scores, list_pred
-        else:
-            return scores
+        return (scores, list_pred) if return_model_prediction else scores
 
     def eval_accuracy(
         self,
@@ -322,12 +310,12 @@ class FilteringAnomalyModel(AnomalyModel):
         )
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_series]),
+            all(isinstance(s, TimeSeries) for s in list_series),
             "all input `series` must be of type Timeseries.",
         )
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_actual_anomalies]),
+            all(isinstance(s, TimeSeries) for s in list_actual_anomalies),
             "all input `actual_anomalies` must be of type Timeseries.",
         )
 

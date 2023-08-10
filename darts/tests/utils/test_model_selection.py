@@ -61,9 +61,7 @@ class ClassTrainTestSplitTestCase(DartsBaseTestClass):
 
         self.assertTrue(
             verify_shape(train_set, 6, 10) and verify_shape(test_set, 2, 10),
-            "Wrong shapes: training set shape: ({}, {}); test set shape ({}, {})".format(
-                len(train_set), len(train_set[0]), len(test_set), len(test_set[0])
-            ),
+            f"Wrong shapes: training set shape: ({len(train_set)}, {len(train_set[0])}); test set shape ({len(test_set)}, {len(test_set[0])})",
         )
 
     def test_sunny_day_horiz_split_absolute(self):
@@ -71,9 +69,7 @@ class ClassTrainTestSplitTestCase(DartsBaseTestClass):
 
         self.assertTrue(
             verify_shape(train_set, 6, 10) and verify_shape(test_set, 2, 10),
-            "Wrong shapes: training set shape: ({}, {}); test set shape ({}, {})".format(
-                len(train_set), len(train_set[0]), len(test_set), len(test_set[0])
-            ),
+            f"Wrong shapes: training set shape: ({len(train_set)}, {len(train_set[0])}); test set shape ({len(test_set)}, {len(test_set[0])})",
         )
 
     def test_horiz_split_overindexing_train_set(self):
@@ -113,9 +109,7 @@ class ClassTrainTestSplitTestCase(DartsBaseTestClass):
 
         self.assertTrue(
             verify_shape(train_set, 2, 151) and verify_shape(test_set, 2, 169),
-            "Wrong shapes: training set shape: ({}, {}); test set shape ({}, {})".format(
-                len(train_set), len(train_set[0]), len(test_set), len(test_set[0])
-            ),
+            f"Wrong shapes: training set shape: ({len(train_set)}, {len(train_set[0])}); test set shape ({len(test_set)}, {len(test_set[0])})",
         )
 
     # test 7
@@ -139,9 +133,7 @@ class ClassTrainTestSplitTestCase(DartsBaseTestClass):
 
         self.assertTrue(
             verify_shape(train_set, 4, 7) and verify_shape(test_set, 4, 4),
-            "Wrong shapes: training set shape: ({}, {}); test set shape ({}, {})".format(
-                len(train_set), len(train_set[0]), len(test_set), len(test_set[0])
-            ),
+            f"Wrong shapes: training set shape: ({len(train_set)}, {len(train_set[0])}); test set shape ({len(test_set)}, {len(test_set[0])})",
         )
 
     def test_negative_test_start_index(self):
@@ -190,9 +182,7 @@ class ClassTrainTestSplitTestCase(DartsBaseTestClass):
 
         self.assertTrue(
             len(train_set) == 7 and len(test_set) == 4,
-            "Wrong shapes: training set shape: {}; test set shape {}".format(
-                len(train_set), len(test_set)
-            ),
+            f"Wrong shapes: training set shape: {len(train_set)}; test set shape {len(test_set)}",
         )
 
     def test_multi_timeseries_variable_ts_length_sunny_day(self):
@@ -214,9 +204,7 @@ class ClassTrainTestSplitTestCase(DartsBaseTestClass):
 
         self.assertTrue(
             train_lengths == [7, 97, 997] and test_lengths == [4, 4, 4],
-            "Wrong shapes: training set shape: {}; test set shape {}".format(
-                train_lengths, test_lengths
-            ),
+            f"Wrong shapes: training set shape: {train_lengths}; test set shape {test_lengths}",
         )
 
     def test_multi_timeseries_variable_ts_length_one_ts_too_small(self):
@@ -245,9 +233,7 @@ class ClassTrainTestSplitTestCase(DartsBaseTestClass):
 
         self.assertTrue(
             verify_shape(train_set, 4, 8) and verify_shape(test_set, 4, 2),
-            "Wrong shapes: training set shape: ({}, {}); test set shape ({}, {})".format(
-                len(train_set), len(train_set[0]), len(test_set), len(test_set[0])
-            ),
+            f"Wrong shapes: training set shape: ({len(train_set)}, {len(train_set[0])}); test set shape ({len(test_set)}, {len(test_set[0])})",
         )
 
     def test_simple_vertical_split_sunny_day_absolute_split(self):
@@ -257,9 +243,7 @@ class ClassTrainTestSplitTestCase(DartsBaseTestClass):
 
         self.assertTrue(
             verify_shape(train_set, 4, 8) and verify_shape(test_set, 4, 2),
-            "Wrong shapes: training set shape: ({}, {}); test set shape ({}, {})".format(
-                len(train_set), len(train_set[0]), len(test_set), len(test_set[0])
-            ),
+            f"Wrong shapes: training set shape: ({len(train_set)}, {len(train_set[0])}); test set shape ({len(test_set)}, {len(test_set[0])})",
         )
 
     def test_simple_vertical_split_exception_on_bad_param(self):

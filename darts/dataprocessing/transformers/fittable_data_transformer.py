@@ -254,11 +254,7 @@ class FittableDataTransformer(BaseDataTransformer):
 
         desc = f"Fitting ({self._name})"
 
-        if isinstance(series, TimeSeries):
-            data = [series]
-        else:
-            data = series
-
+        data = [series] if isinstance(series, TimeSeries) else series
         if self._mask_components:
             data = [
                 self.apply_component_mask(ts, component_mask, return_ts=True)

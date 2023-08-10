@@ -105,15 +105,12 @@ def process_input(
         series = fallback_series
         past_covariates = fallback_past_covariates
         future_covariates = fallback_future_covariates
-    # otherwise use the passed input, and generate the covariate encodings (they will be removed again later on
-    # if `requires_covariates_encoding=False`)
-    else:
-        if model.encoders.encoding_available:
-            past_covariates, future_covariates = model.generate_fit_encodings(
-                series=series,
-                past_covariates=past_covariates,
-                future_covariates=future_covariates,
-            )
+    elif model.encoders.encoding_available:
+        past_covariates, future_covariates = model.generate_fit_encodings(
+            series=series,
+            past_covariates=past_covariates,
+            future_covariates=future_covariates,
+        )
 
     series = series2seq(series)
     past_covariates = series2seq(past_covariates)
@@ -359,4 +356,4 @@ def _check_valid_input(
 
 
 def _test_stationarity(series: Union[TimeSeries, Sequence[TimeSeries]]):
-    return all([(stationarity_tests(bs[c]) for c in bs.components) for bs in series])
+    return all((stationarity_tests(bs[c]) for c in bs.components) for bs in series)

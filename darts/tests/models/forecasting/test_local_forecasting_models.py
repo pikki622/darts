@@ -131,9 +131,7 @@ class LocalForecastingModelsTestCase(DartsBaseTestClass):
     ts_ice_heater = IceCreamHeaterDataset().load()
     ts_ice_heater_train, ts_ice_heater_val = ts_ice_heater.split_after(split_point=0.7)
 
-    def retrain_func(
-        counter, pred_time, train_series, past_covariates, future_covariates
-    ):
+    def retrain_func(self, pred_time, train_series, past_covariates, future_covariates):
         return len(train_series) % 2 == 0
 
     def setUp(self):
@@ -237,8 +235,7 @@ class LocalForecastingModelsTestCase(DartsBaseTestClass):
             current_mape = mape(self.ts_pass_val, prediction)
             self.assertTrue(
                 current_mape < max_mape,
-                "{} model exceeded the maximum MAPE of {}. "
-                "with a MAPE of {}".format(str(model), max_mape, current_mape),
+                f"{str(model)} model exceeded the maximum MAPE of {max_mape}. with a MAPE of {current_mape}",
             )
 
     def test_multivariate_models_performance(self):
@@ -250,8 +247,7 @@ class LocalForecastingModelsTestCase(DartsBaseTestClass):
             current_mape = mape(self.ts_ice_heater_val, prediction)
             self.assertTrue(
                 current_mape < max_mape,
-                "{} model exceeded the maximum MAPE of {}. "
-                "with a MAPE of {}".format(str(model), max_mape, current_mape),
+                f"{str(model)} model exceeded the maximum MAPE of {max_mape}. with a MAPE of {current_mape}",
             )
 
     def test_multivariate_input(self):
@@ -338,10 +334,7 @@ class LocalForecastingModelsTestCase(DartsBaseTestClass):
             )
             # test once with user supplied covariates, and once without
             for fc in [future_covariates, None]:
-                model_params = {
-                    k: vals
-                    for k, vals in copy.deepcopy(model_object.model_params).items()
-                }
+                model_params = dict(copy.deepcopy(model_object.model_params).items())
                 model_params["add_encoders"] = add_encoders
                 model = model_object.__class__(**model_params)
 
@@ -402,8 +395,10 @@ class LocalForecastingModelsTestCase(DartsBaseTestClass):
             (VARIMA, {"d": 1}, MULTIVARIATE),
         ]
 
+        pred_len = 5
+        # check probabilistic forecast
+        n_samples = 3
         for model_cls, kwargs, model_type in params:
-            pred_len = 5
             if model_type == MULTIVARIATE:
                 series1 = self.ts_ice_heater_train
                 series2 = self.ts_ice_heater_val
@@ -435,8 +430,6 @@ class LocalForecastingModelsTestCase(DartsBaseTestClass):
             pred1 = model.predict(n=pred_len)
             pred2 = model.predict(n=pred_len, series=series2)
 
-            # check probabilistic forecast
-            n_samples = 3
             pred1 = model.predict(n=pred_len, num_samples=n_samples)
             pred2 = model.predict(n=pred_len, series=series2, num_samples=n_samples)
 

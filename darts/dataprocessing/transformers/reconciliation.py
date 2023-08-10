@@ -114,8 +114,7 @@ class TopDownReconciliator(FittableDataTransformer):
     def ts_fit(
         series: TimeSeries, params: Mapping[str, Any], *args, **kwargs
     ) -> np.ndarray:
-        G = TopDownReconciliator.get_projection_matrix(series)
-        return G
+        return TopDownReconciliator.get_projection_matrix(series)
 
     @staticmethod
     def ts_transform(
@@ -223,28 +222,28 @@ class MinTReconciliator(FittableDataTransformer):
     def get_matrices(series: Optional[TimeSeries], method: str):
         """Returns the G matrix given a specified reconciliation method."""
         S = _get_summation_matrix(series)
-        if method == "ols":
+        if method == "mint_cov":
+            MinTReconciliator._assert_deterministic(series)
+            Wh = np.cov(
+                series.values(copy=False).T
+            )  # + 1e-3 * np.eye(len(series.components))
+        elif method == "ols":
             # G = inv(S'*S)*S'
             G = np.linalg.inv(S.T @ S) @ S.T
             return S, G
         elif method == "wls_struct":
             # Wh is a diagonal matrix with entry i,i being the sum of row i of S_mat
             Wh = np.diag(np.sum(S, axis=1))
+        elif method == "wls_val":
+            # Wh is a diagonal matrix with entry i,i being the average value of the corresponding time series
+            quantities = series.all_values(copy=False).mean(axis=2).mean(axis=0)
+            Wh = np.diag(np.array(quantities))
         elif method == "wls_var":
             # In this case we assume that series contains the residuals of some forecasts
             MinTReconciliator._assert_deterministic(series)
             et2 = series.values(copy=False) ** 2  # squared residuals
             # Wh diagonal is mean squared residual over time:
             Wh = np.diag(et2.mean(axis=0))
-        elif method == "wls_val":
-            # Wh is a diagonal matrix with entry i,i being the average value of the corresponding time series
-            quantities = series.all_values(copy=False).mean(axis=2).mean(axis=0)
-            Wh = np.diag(np.array(quantities))
-        elif method == "mint_cov":
-            MinTReconciliator._assert_deterministic(series)
-            Wh = np.cov(
-                series.values(copy=False).T
-            )  # + 1e-3 * np.eye(len(series.components))
         else:
             raise_if_not(False, f"Unknown method: {method}")
 

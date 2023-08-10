@@ -123,9 +123,9 @@ class LightGBMModel(RegressionModelWithCategoricalCovariates, _LikelihoodMixin):
         self.likelihood = likelihood
         self._rng = None
 
-        # parse likelihood
-        available_likelihoods = ["quantile", "poisson"]  # to be extended
         if likelihood is not None:
+            # parse likelihood
+            available_likelihoods = ["quantile", "poisson"]  # to be extended
             self._check_likelihood(likelihood, available_likelihoods)
             self.kwargs["objective"] = likelihood
             self._rng = np.random.default_rng(seed=random_state)  # seed for sampling

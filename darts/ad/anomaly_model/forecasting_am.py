@@ -138,7 +138,7 @@ class ForecastingAnomalyModel(AnomalyModel):
         list_series = _to_list(series)
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_series]),
+            all(isinstance(s, TimeSeries) for s in list_series),
             "all input `series` must be of type Timeseries.",
         )
 
@@ -242,9 +242,7 @@ class ForecastingAnomalyModel(AnomalyModel):
             list_covariates = _to_list(covariates)
 
             for covariates in list_covariates:
-                _assert_timeseries(
-                    covariates, name_covariates + "_covariates input series"
-                )
+                _assert_timeseries(covariates, f"{name_covariates}_covariates input series")
 
             raise_if_not(
                 len(list_covariates) == len(series),
@@ -473,10 +471,7 @@ class ForecastingAnomalyModel(AnomalyModel):
         if len(list_pred) == 1:
             list_pred = list_pred[0]
 
-        if return_model_prediction:
-            return scores, list_pred
-        else:
-            return scores
+        return (scores, list_pred) if return_model_prediction else scores
 
     def _check_window_size(
         self, series: Sequence[TimeSeries], start: Union[pd.Timestamp, float, int]
@@ -554,12 +549,7 @@ class ForecastingAnomalyModel(AnomalyModel):
 
         # TODO: raise an exception. We only support models that do not need retrain
         # checks if model accepts to not be retrained in the historical_forecasts()
-        if self.model._supports_non_retrainable_historical_forecasts:
-            # default: set to False. Allows a faster computation.
-            retrain = False
-        else:
-            retrain = True
-
+        retrain = not self.model._supports_non_retrainable_historical_forecasts
         historical_forecasts_param = {
             "past_covariates": past_covariates,
             "future_covariates": future_covariates,
@@ -641,12 +631,12 @@ class ForecastingAnomalyModel(AnomalyModel):
         list_series = _to_list(series)
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_series]),
+            all(isinstance(s, TimeSeries) for s in list_series),
             "all input `series` must be of type Timeseries.",
         )
 
         raise_if_not(
-            all([isinstance(s, TimeSeries) for s in list_actual_anomalies]),
+            all(isinstance(s, TimeSeries) for s in list_actual_anomalies),
             "all input `actual_anomalies` must be of type Timeseries.",
         )
 

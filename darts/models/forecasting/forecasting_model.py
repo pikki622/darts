@@ -75,7 +75,7 @@ class ModelMeta(ABCMeta):
             [
                 (p.name, p.default)
                 for p in sig.parameters.values()
-                if not p.name == "self"
+                if p.name != "self"
             ]
         )
 
@@ -83,11 +83,11 @@ class ModelMeta(ABCMeta):
         for param, arg in zip(all_params, args):
             all_params[param] = arg
 
-        # 3) remove args which were not set (and are per default empty)
-        remove_params = []
-        for param, val in all_params.items():
-            if val is sig.parameters[param].empty:
-                remove_params.append(param)
+        remove_params = [
+            param
+            for param, val in all_params.items()
+            if val is sig.parameters[param].empty
+        ]
         for param in remove_params:
             all_params.pop(param)
 
@@ -156,9 +156,7 @@ class ForecastingModel(ABC, metaclass=ModelMeta):
         """
         raise_if_not(
             len(series) >= self.min_train_series_length,
-            "Train series only contains {} elements but {} model requires at least {} entries".format(
-                len(series), str(self), self.min_train_series_length
-            ),
+            f"Train series only contains {len(series)} elements but {str(self)} model requires at least {self.min_train_series_length} entries",
         )
         self.training_series = series
         self._fit_called = True
@@ -324,7 +322,7 @@ class ForecastingModel(ABC, metaclass=ModelMeta):
         verbose: bool = False,
         predict_likelihood_parameters: bool = False,
     ) -> TimeSeries:
-        kwargs = dict()
+        kwargs = {}
         if self.supports_likelihood_parameter_prediction:
             kwargs["predict_likelihood_parameters"] = predict_likelihood_parameters
         return self.predict(n, num_samples=num_samples, verbose=verbose, **kwargs)
@@ -535,12 +533,11 @@ class ForecastingModel(ABC, metaclass=ModelMeta):
         _historical_forecasts_general_checks(self, series, kwargs)
 
     def _get_last_prediction_time(self, series, forecast_horizon, overlap_end):
-        if overlap_end:
-            last_valid_pred_time = series.time_index[-1]
-        else:
-            last_valid_pred_time = series.time_index[-forecast_horizon]
-
-        return last_valid_pred_time
+        return (
+            series.time_index[-1]
+            if overlap_end
+            else series.time_index[-forecast_horizon]
+        )
 
     def _check_optimizable_historical_forecasts(
         self,
@@ -1418,7 +1415,7 @@ class ForecastingModel(ABC, metaclass=ModelMeta):
             list(zip(parameters.keys(), params_cross_product[errors.index(min_error)]))
         )
 
-        logger.info("Chosen parameters: " + str(best_param_combination))
+        logger.info(f"Chosen parameters: {best_param_combination}")
 
         return model_class(**best_param_combination), best_param_combination, min_error
 
@@ -1471,7 +1468,7 @@ class ForecastingModel(ABC, metaclass=ModelMeta):
         future_covariates = series2seq(future_covariates)
 
         raise_if_not(
-            all([serie.is_univariate for serie in series]),
+            all(serie.is_univariate for serie in series),
             "Each series in the sequence must be univariate.",
             logger,
         )
@@ -1680,7 +1677,7 @@ class ForecastingModel(ABC, metaclass=ModelMeta):
         pass
 
     @classmethod
-    def _sample_params(model_class, params, n_random_samples):
+    def _sample_params(cls, params, n_random_samples):
         """Select the absolute number of samples randomly if an integer has been supplied. If a float has been
         supplied, select a fraction"""
 
@@ -2156,7 +2153,7 @@ class GlobalForecastingModel(ForecastingModel, ABC):
         verbose: bool = False,
         predict_likelihood_parameters: bool = False,
     ) -> TimeSeries:
-        kwargs = dict()
+        kwargs = {}
         if self.supports_likelihood_parameter_prediction:
             kwargs["predict_likelihood_parameters"] = predict_likelihood_parameters
         return self.predict(
@@ -2394,7 +2391,7 @@ class FutureCovariatesLocalForecastingModel(LocalForecastingModel, ABC):
         verbose: bool = False,
         predict_likelihood_parameters: bool = False,
     ) -> TimeSeries:
-        kwargs = dict()
+        kwargs = {}
         if self.supports_likelihood_parameter_prediction:
             kwargs["predict_likelihood_parameters"] = predict_likelihood_parameters
         return self.predict(
@@ -2611,7 +2608,7 @@ class TransferableFutureCovariatesLocalForecastingModel(
         verbose: bool = False,
         predict_likelihood_parameters: bool = False,
     ) -> TimeSeries:
-        kwargs = dict()
+        kwargs = {}
         if self.supports_likelihood_parameter_prediction:
             kwargs["predict_likelihood_parameters"] = predict_likelihood_parameters
         return self.predict(

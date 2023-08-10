@@ -164,7 +164,7 @@ class TimeSeriesWindowTransformTestCase(unittest.TestCase):
 
         # multivariate deterministic input
         # transform one component
-        transforms.update({"components": "0"})
+        transforms["components"] = "0"
 
         transformed_ts = self.series_multi_det.window_transform(transforms=transforms)
         self.assertEqual(
@@ -277,7 +277,7 @@ class TimeSeriesWindowTransformTestCase(unittest.TestCase):
         self.assertEqual(transformed_ts, expected_transformed_series)
 
         # test if a customized function name is provided
-        transformation.update({"function_name": "count_above_mean"})
+        transformation["function_name"] = "count_above_mean"
         transformed_ts = self.target.window_transform(
             transformation,
         )
@@ -543,14 +543,14 @@ class WindowTransformerTestCase(unittest.TestCase):
         }
 
         offset_parameters = base_parameters.copy()
-        offset_parameters.update({"window": pd.Timedelta(hours=4)})
+        offset_parameters["window"] = pd.Timedelta(hours=4)
         offset_transformer = WindowTransformer(
             transforms=offset_parameters,
         )
         offset_transformed = offset_transformer.transform(self.target_hourly)
 
         integer_parameters = base_parameters.copy()
-        integer_parameters.update({"window": 4})
+        integer_parameters["window"] = 4
         integer_transformer = WindowTransformer(
             transforms=integer_parameters,
         )
@@ -564,7 +564,7 @@ class WindowTransformerTestCase(unittest.TestCase):
         self.assertEqual(integer_transformed.components[0], "rolling_mean_4_0")
 
         invalid_parameters = base_parameters.copy()
-        invalid_parameters.update({"window": pd.DateOffset(hours=4)})
+        invalid_parameters["window"] = pd.DateOffset(hours=4)
         invalid_transformer = WindowTransformer(
             transforms=invalid_parameters,
         )

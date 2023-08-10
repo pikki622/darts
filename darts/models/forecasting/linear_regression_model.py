@@ -104,15 +104,15 @@ class LinearRegressionModel(RegressionModel, _LikelihoodMixin):
         self.likelihood = likelihood
         self._rng = None
 
-        # parse likelihood
-        available_likelihoods = ["quantile", "poisson"]  # to be extended
         if likelihood is not None:
+            # parse likelihood
+            available_likelihoods = ["quantile", "poisson"]  # to be extended
             self._check_likelihood(likelihood, available_likelihoods)
             self._rng = np.random.default_rng(seed=random_state)
 
             if likelihood == "poisson":
                 model = PoissonRegressor(**kwargs)
-            if likelihood == "quantile":
+            elif likelihood == "quantile":
                 model = QuantileRegressor(**kwargs)
                 self.quantiles, self._median_idx = self._prepare_quantiles(quantiles)
                 self._model_container = self._get_model_container()
@@ -197,8 +197,6 @@ class LinearRegressionModel(RegressionModel, _LikelihoodMixin):
 
                 self._model_container[quantile] = self.model
 
-            return self
-
         else:
             super().fit(
                 series=series,
@@ -208,7 +206,8 @@ class LinearRegressionModel(RegressionModel, _LikelihoodMixin):
                 **kwargs,
             )
 
-            return self
+
+        return self
 
     def _predict_and_sample(
         self,

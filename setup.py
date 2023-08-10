@@ -14,10 +14,7 @@ torch_reqs = read_requirements("requirements/torch.txt")
 
 reqs = base_reqs + torch_reqs
 
-with open("README.md") as fh:
-    LONG_DESCRIPTION = fh.read()
-
-
+LONG_DESCRIPTION = Path("README.md").read_text()
 URL = "https://unit8co.github.io/darts/"
 
 

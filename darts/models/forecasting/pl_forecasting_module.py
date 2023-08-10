@@ -110,10 +110,10 @@ class PLForecastingModule(pl.LightningModule, ABC):
 
         # persist optimiser and LR scheduler parameters
         self.optimizer_cls = optimizer_cls
-        self.optimizer_kwargs = dict() if optimizer_kwargs is None else optimizer_kwargs
+        self.optimizer_kwargs = {} if optimizer_kwargs is None else optimizer_kwargs
         self.lr_scheduler_cls = lr_scheduler_cls
         self.lr_scheduler_kwargs = (
-            dict() if lr_scheduler_kwargs is None else lr_scheduler_kwargs
+            {} if lr_scheduler_kwargs is None else lr_scheduler_kwargs
         )
 
         # convert torch_metrics to torchmetrics.MetricCollection
@@ -237,19 +237,23 @@ class PLForecastingModule(pl.LightningModule, ABC):
         batch_predictions = torch.cat(batch_predictions, dim=0)
         batch_predictions = batch_predictions.cpu().detach().numpy()
 
-        ts_forecasts = Parallel(n_jobs=self.pred_n_jobs)(
+        return Parallel(n_jobs=self.pred_n_jobs)(
             delayed(_build_forecast_series)(
-                [batch_prediction[batch_idx] for batch_prediction in batch_predictions],
+                [
+                    batch_prediction[batch_idx]
+                    for batch_prediction in batch_predictions
+                ],
                 input_series,
-                custom_columns=self.likelihood.likelihood_components_names(input_series)
+                custom_columns=self.likelihood.likelihood_components_names(
+                    input_series
+                )
                 if self.predict_likelihood_parameters
                 else None,
-                with_static_covs=False if self.predict_likelihood_parameters else True,
-                with_hierarchy=False if self.predict_likelihood_parameters else True,
+                with_static_covs=not self.predict_likelihood_parameters,
+                with_hierarchy=not self.predict_likelihood_parameters,
             )
             for batch_idx, input_series in enumerate(batch_input_series)
         )
-        return ts_forecasts
 
     def set_predict_parameters(
         self,
@@ -318,13 +322,13 @@ class PLForecastingModule(pl.LightningModule, ABC):
 
         # Create the optimizer and (optionally) the learning rate scheduler
         # we have to create copies because we cannot save model.parameters into object state (not serializable)
-        optimizer_kws = {k: v for k, v in self.optimizer_kwargs.items()}
+        optimizer_kws = dict(self.optimizer_kwargs.items())
         optimizer_kws["params"] = self.parameters()
 
         optimizer = _create_from_cls_and_kwargs(self.optimizer_cls, optimizer_kws)
 
         if self.lr_scheduler_cls is not None:
-            lr_sched_kws = {k: v for k, v in self.lr_scheduler_kwargs.items()}
+            lr_sched_kws = dict(self.lr_scheduler_kwargs.items())
             lr_sched_kws["optimizer"] = optimizer
 
             # ReduceLROnPlateau requires a metric to "monitor" which must be set separately, most others do not
@@ -383,14 +387,14 @@ class PLForecastingModule(pl.LightningModule, ABC):
         return self.likelihood is not None or len(self._get_mc_dropout_modules()) > 0
 
     def _produce_predict_output(self, x: Tuple) -> torch.Tensor:
-        if self.likelihood:
-            output = self(x)
-            if self.predict_likelihood_parameters:
-                return self.likelihood.predict_likelihood_parameters(output)
-            else:
-                return self.likelihood.sample(output)
-        else:
+        if not self.likelihood:
             return self(x).squeeze(dim=-1)
+        output = self(x)
+        return (
+            self.likelihood.predict_likelihood_parameters(output)
+            if self.predict_likelihood_parameters
+            else self.likelihood.sample(output)
+        )
 
     def on_save_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
         # we must save the dtype for correct parameter precision at loading time
@@ -410,10 +414,7 @@ class PLForecastingModule(pl.LightningModule, ABC):
         self.to_dtype(dtype)
 
         # restoring attributes necessary to resume from training properly
-        if (
-            "loss_fn" in checkpoint.keys()
-            and "torch_metrics_train" in checkpoint.keys()
-        ):
+        if "loss_fn" in checkpoint and "torch_metrics_train" in checkpoint:
             self.criterion = checkpoint["loss_fn"]
             self.train_metrics = checkpoint["torch_metrics_train"]
             self.val_metrics = checkpoint["torch_metrics_val"]
@@ -467,9 +468,7 @@ class PLForecastingModule(pl.LightningModule, ABC):
             torch_metrics = torchmetrics.MetricCollection([])
         elif isinstance(torch_metrics, torchmetrics.Metric):
             torch_metrics = torchmetrics.MetricCollection([torch_metrics])
-        elif isinstance(torch_metrics, torchmetrics.MetricCollection):
-            pass
-        else:
+        elif not isinstance(torch_metrics, torchmetrics.MetricCollection):
             raise_log(
                 AttributeError(
                     "`torch_metrics` only accepts type torchmetrics.Metric or torchmetrics.MetricCollection"

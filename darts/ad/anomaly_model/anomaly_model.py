@@ -23,7 +23,7 @@ class AnomalyModel(ABC):
         self.scorers = _to_list(scorer)
 
         raise_if_not(
-            all([isinstance(s, AnomalyScorer) for s in self.scorers]),
+            all(isinstance(s, AnomalyScorer) for s in self.scorers),
             "all scorers must be of instance darts.ad.scorers.AnomalyScorer.",
         )
 
@@ -39,14 +39,8 @@ class AnomalyModel(ABC):
 
         if self.univariate_scoring:
             raise_if_not(
-                all([s.width == 1 for s in actual_anomalies]),
-                "Anomaly model contains scorer {} that will return".format(
-                    [s.__str__() for s in self.scorers if s.univariate_scorer]
-                )
-                + " a univariate anomaly score series (width=1). Found a"
-                + " multivariate `actual_anomalies`. The evaluation of the"
-                + " accuracy cannot be computed. If applicable, think about"
-                + " setting the scorer parameter `componenet_wise` to True.",
+                all(s.width == 1 for s in actual_anomalies),
+                f"Anomaly model contains scorer {[s.__str__() for s in self.scorers if s.univariate_scorer]} that will return a univariate anomaly score series (width=1). Found a multivariate `actual_anomalies`. The evaluation of the accuracy cannot be computed. If applicable, think about setting the scorer parameter `componenet_wise` to True.",
             )
 
     @abstractmethod
@@ -122,27 +116,27 @@ class AnomalyModel(ABC):
         # the accuracy of each scorer.
         name_scorers = []
         for scorer in self.scorers:
-            name = scorer.__str__() + "_w=" + str(scorer.window)
+            name = f"{scorer.__str__()}_w={str(scorer.window)}"
 
             if name in name_scorers:
                 i = 1
-                new_name = name + "_" + str(i)
+                new_name = f"{name}_{i}"
                 while new_name in name_scorers:
                     i = i + 1
-                    new_name = name + "_" + str(i)
+                    new_name = f"{name}_{str(i)}"
                 name = new_name
 
             name_scorers.append(name)
 
-        acc = []
-        for anomalies, scores in zip(list_actual_anomalies, list_anomaly_scores):
-            acc.append(
-                eval_accuracy_from_scores(
-                    actual_anomalies=anomalies,
-                    anomaly_score=scores,
-                    window=windows,
-                    metric=metric,
-                )
+        acc = [
+            eval_accuracy_from_scores(
+                actual_anomalies=anomalies,
+                anomaly_score=scores,
+                window=windows,
+                metric=metric,
             )
-
+            for anomalies, scores in zip(
+                list_actual_anomalies, list_anomaly_scores
+            )
+        ]
         return [dict(zip(name_scorers, scorer_values)) for scorer_values in acc]

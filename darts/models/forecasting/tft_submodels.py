@@ -43,10 +43,7 @@ def get_embedding_size(n: int, max_size: int = 100) -> int:
     Returns:
         int: embedding size
     """
-    if n > 2:
-        return min(round(1.6 * n**0.56), max_size)
-    else:
-        return 1
+    return min(round(1.6 * n**0.56), max_size) if n > 2 else 1
 
 
 class _TimeDistributedEmbeddingBag(nn.EmbeddingBag):
@@ -179,10 +176,7 @@ class _GatedLinearUnit(nn.Module):
     def __init__(self, input_size: int, hidden_size: int = None, dropout: float = None):
         super().__init__()
 
-        if dropout is not None:
-            self.dropout = MonteCarloDropout(dropout)
-        else:
-            self.dropout = dropout
+        self.dropout = MonteCarloDropout(dropout) if dropout is not None else dropout
         self.hidden_size = hidden_size or input_size
         self.fc = nn.Linear(input_size, self.hidden_size * 2)
 
@@ -234,8 +228,7 @@ class _ResampleNorm(nn.Module):
         if self.trainable_add:
             x = x * self.gate(self.mask) * 2.0
 
-        output = self.norm(x)
-        return output
+        return self.norm(x)
 
 
 class _AddNorm(nn.Module):
@@ -269,8 +262,7 @@ class _AddNorm(nn.Module):
         if self.trainable_add:
             skip = skip * self.gate(self.mask) * 2.0
 
-        output = self.norm(x + skip)
-        return output
+        return self.norm(x + skip)
 
 
 class _GateAddNorm(nn.Module):
@@ -509,10 +501,7 @@ class _VariableSelectionNetwork(nn.Module):
 class _ScaledDotProductAttention(nn.Module):
     def __init__(self, dropout: float = None, scale: bool = True):
         super().__init__()
-        if dropout is not None:
-            self.dropout = MonteCarloDropout(p=dropout)
-        else:
-            self.dropout = dropout
+        self.dropout = MonteCarloDropout(p=dropout) if dropout is not None else dropout
         self.softmax = nn.Softmax(dim=2)
         self.scale = scale
 
